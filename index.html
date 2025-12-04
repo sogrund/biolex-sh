@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personenlexikon Schleswig-Holstein</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- PapaParse CDN for CSV parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 p-6">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-pink-600">Personenlexikon Schleswig-Holstein</h1>
+
+    <!-- Search and View Toggle -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <input id="searchInput" type="text" placeholder="Suche nach Name, Ort ..." class="w-full md:w-1/2 px-4 py-2 rounded-xl border border-gray-300" />
+
+      <div class="flex gap-2">
+        <button id="cardViewBtn" class="px-4 py-2 rounded-xl bg-blue-600 text-white">Kartenansicht</button>
+        <button id="tableViewBtn" class="px-4 py-2 rounded-xl border border-gray-400">Tabellenansicht</button>
+      </div>
+    </div>
+
+    <!-- Card Container -->
+    <div id="cardContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+    <!-- Table Container -->
+    <div id="tableContainer" class="hidden overflow-x-auto">
+      <table class="min-w-full bg-white shadow rounded-xl overflow-hidden">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-4 py-2 text-left">Name</th>
+            <th class="px-4 py-2 text-left">Geburtstag</th>
+            <th class="px-4 py-2 text-left">Geburtsort</th>
+            <th class="px-4 py-2 text-left">Sterbedatum</th>
+            <th class="px-4 py-2 text-left">Sterbeort</th>
+            <th class="px-4 py-2 text-left">Referenz</th>
+            <th class="px-4 py-2 text-left">Biografie</th>
+            <th class="px-4 py-2 text-left">GND</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Pfad zur CSV-Datei im Github-Repository
+    const csvUrl = "data.csv"; // Die Datei muss im selben Ordner wie index.html liegen
+
+    let data = [];
+
+    // CSV laden
+    Papa.parse(csvUrl, {
+      download: true,
+      header: true,
+      complete: function(results) {
+        data = results.data;
+        renderCards(data);
+        renderTable(data);
+      }
+    });
+
+    // Suche
+    document.getElementById("searchInput").addEventListener("input", function(e) {
+      const query = e.target.value.toLowerCase();
+      const filtered = data.filter(row =>
+        Object.values(row).some(val =>
+          String(val).toLowerCase().includes(query)
+        )
+      );
+      renderCards(filtered);
+      renderTable(filtered);
+    });
+
+    // Umschalten der Ansicht
+    const cardContainer = document.getElementById("cardContainer");
+    const tableContainer = document.getElementById("tableContainer");
+
+    document.getElementById("cardViewBtn").onclick = () => {
+      cardContainer.classList.remove("hidden");
+      tableContainer.classList.add("hidden");
+    };
+
+    document.getElementById("tableViewBtn").onclick = () => {
+      cardContainer.classList.add("hidden");
+      tableContainer.classList.remove("hidden");
+    };
+
+    // Kartenansicht rendern
+    function renderCards(rows) {
+      cardContainer.innerHTML = rows.map(row => `
+        <div class="bg-white p-4 shadow rounded-xl text-blue-800">
+          <h2 class="text-xl font-semibold mb-2">${row.Name}</h2>
+          <p><strong>Geburtstag:</strong> ${row.Geburtstag}</p>
+          <p><strong>Geburtsort:</strong> ${row.Geburtsort}</p>
+          <p><strong>Sterbedatum:</strong> ${row.Sterbedatum}</p>
+          <p><strong>Sterbeort:</strong> ${row.Sterbeort}</p>
+          <p><strong>Referenz:</strong> ${row.Referenz}</p>
+          <p class="mt-2 text-sm text-gray-700">${row.Biografie}</p>
+          <p class="mt-2 text-sm"><strong>GND:</strong> ${row.GND}</p>
+        </div>`).join('');
+    }
+
+    // Tabellenansicht rendern
+    function renderTable(rows) {
+      const tableBody = document.getElementById("tableBody");
+      tableBody.innerHTML = rows.map(row => `
+        <tr class="border-b">
+          <td class="px-4 py-2">${row.Name}</td>
+          <td class="px-4 py-2">${row.Geburtstag}</td>
+          <td class="px-4 py-2">${row.Geburtsort}</td>
+          <td class="px-4 py-2">${row.Sterbedatum}</td>
+          <td class="px-4 py-2">${row.Sterbeort}</td>
+          <td class="px-4 py-2">${row.Referenz}</td>
+          <td class="px-4 py-2">${row.Biografie}</td>
+          <td class="px-4 py-2">${row.GND}</td>
+        </tr>`).join('');
+    }
+  </script>
+  <!-- Map Container -->
+  <div id="map" class="w-full h-96 my-10 rounded-xl shadow"></div>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const map = L.map('map').setView([54.5, 9.5], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    async function geocode(place) {
+      if (!place) return null;
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place + ', Germany')}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data && data[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+      return null;
+    }
+
+    async function renderMap(rows) {
+      map.eachLayer(layer => {
+        if (layer instanceof L.Marker) map.removeLayer(layer);
+      });
+      for (const row of rows) {
+        const birth = await gecode(row.Geburtsort);
+        if (birth) L.marker(birth).addTo(map).bindPopup(`<b>${row.Name}</b><br>Geburtsort: ${row.Geburtsort}`);
+        const death = await geocode(row.Sterbeort);
+        if (death) L.marker(death).addTo(map).bindPopup(`<b>${row.Name}</b><br>Sterbeort: ${row.Sterbeort}`);
+      }
+    }
+  </script>
+</body>
+</html>
