@@ -4,157 +4,286 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Personenlexikon Schleswig-Holstein</title>
-  <!-- Tailwind CSS CDN -->
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- PapaParse CDN for CSV parsing -->
+
+  <!-- PapaParse -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
 </head>
-<body class="bg-gray-50 text-gray-900 p-6">
-  <div class="max-w-6xl mx-auto">
+<body class="bg-gray-100">
+
+<div class="flex">
+
+  <!-- Sidebar -->
+  <aside class="w-72 bg-white shadow h-screen p-4 overflow-y-auto">
+    <h2 class="text-xl font-semibold mb-4">🔍 Filter</h2>
+
+    <!-- Sterbeort -->
+    <details class="mb-4">
+      <summary class="cursor-pointer font-medium">Sterbeort</summary>
+      <div id="filterSterbeort" class="mt-2 space-y-1"></div>
+    </details>
+
+    <!-- Sterbedatum (Spanne) -->
+    <details class="mb-4">
+      <summary class="cursor-pointer font-medium">Sterbedatum (Jahre)</summary>
+      <div class="mt-2">
+        <label>von</label>
+        <input id="deathYearMin" type="number" class="w-full border rounded p-1 mb-2">
+        <label>bis</label>
+        <input id="deathYearMax" type="number" class="w-full border rounded p-1">
+      </div>
+    </details>
+
+    <!-- Geburtsort -->
+    <details class="mb-4">
+      <summary class="cursor-pointer font-medium">Geburtsort</summary>
+      <div id="filterGeburtsort" class="mt-2 space-y-1"></div>
+    </details>
+
+    <!-- Geburtsdatum (Spanne) -->
+    <details class="mb-4">
+      <summary class="cursor-pointer font-medium">Geburtsdatum (Jahre)</summary>
+      <div class="mt-2">
+        <label>von</label>
+        <input id="birthYearMin" type="number" class="w-full border rounded p-1 mb-2">
+        <label>bis</label>
+        <input id="birthYearMax" type="number" class="w-full border rounded p-1">
+      </div>
+    </details>
+
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6">
+
     <h1 class="text-3xl font-bold mb-6 text-pink-600">Personenlexikon Schleswig-Holstein</h1>
 
-    <!-- Search and View Toggle -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-      <input id="searchInput" type="text" placeholder="Suche nach Name, Ort ..." class="w-full md:w-1/2 px-4 py-2 rounded-xl border border-gray-300" />
-
-      <div class="flex gap-2">
-        <button id="cardViewBtn" class="px-4 py-2 rounded-xl bg-darkblue-600 text-white">Kartenansicht</button>
-        <button id="tableViewBtn" class="px-4 py-2 rounded-xl border border-gray-400">Tabellenansicht</button>
-      </div>
-    </div>
+    <!-- Search -->
+    <input id="searchInput" type="text" placeholder="Suche nach Name, Ort ..."
+           class="w-full md:w-1/2 px-4 py-2 rounded-xl border border-gray-300 mb-6" />
 
     <!-- Card Container -->
-    <div id="cardContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <div id="cardContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10"></div>
 
-    <!-- Table Container -->
-    <div id="tableContainer" class="hidden overflow-x-auto">
+    <!-- Table -->
+    <div class="overflow-x-auto">
       <table class="min-w-full bg-white shadow rounded-xl overflow-hidden">
         <thead class="bg-gray-200">
           <tr>
             <th class="px-4 py-2 text-left">Name</th>
-            <th class="px-4 py-2 text-left">Geburtstag</th>
+            <th class="px-4 py-2 text-left">Geburtsjahr</th>
             <th class="px-4 py-2 text-left">Geburtsort</th>
-            <th class="px-4 py-2 text-left">Sterbedatum</th>
+            <th class="px-4 py-2 text-left">Sterbejahr</th>
             <th class="px-4 py-2 text-left">Sterbeort</th>
-            <th class="px-4 py-2 text-left">Quelle</th>
-            <th class="px-4 py-2 text-left">Biografie</th>
-            <th class="px-4 py-2 text-left">GND</th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
       </table>
     </div>
-  </div>
 
-  <script>
-    // Pfad zur CSV-Datei im Github-Repository
-    const csvUrl = "data.csv"; // Die Datei muss im selben Ordner wie index.html liegen
+    <!-- Map -->
+    <div id="map" class="w-full h-96 my-10 rounded-xl shadow"></div>
 
-    let data = [];
+  </main>
 
-    // CSV laden
-    Papa.parse(csvUrl, {
-      download: true,
-      header: true,
-      complete: function(results) {
-        data = results.data;
-        renderCards(data);
-        renderTable(data);
-      }
-    });
+</div>
 
-    // Suche
-    document.getElementById("searchInput").addEventListener("input", function(e) {
-      const query = e.target.value.toLowerCase();
-      const filtered = data.filter(row =>
-        Object.values(row).some(val =>
-          String(val).toLowerCase().includes(query)
-        )
-      );
-      renderCards(filtered);
-      renderTable(filtered);
-    });
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    // Umschalten der Ansicht
-    const cardContainer = document.getElementById("cardContainer");
-    const tableContainer = document.getElementById("tableContainer");
+<script>
+const csvUrl = "data.csv";
+let data = [];
+let activeFilters = {
+  sterbeorte: new Set(),
+  geburtsorte: new Set(),
+  deathMin: null,
+  deathMax: null,
+  birthMin: null,
+  birthMax: null,
+  search: ""
+};
 
-    document.getElementById("cardViewBtn").onclick = () => {
-      cardContainer.classList.remove("hidden");
-      tableContainer.classList.add("hidden");
-    };
+// Load CSV
+Papa.parse(csvUrl, {
+  download: true,
+  header: true,
+  complete: function(results) {
+    data = results.data;
 
-    document.getElementById("tableViewBtn").onclick = () => {
-      cardContainer.classList.add("hidden");
-      tableContainer.classList.remove("hidden");
-    };
+    createFacetFilters();
+    applyFilters();
+  }
+});
 
-    // Kartenansicht rendern
-    function renderCards(rows) {
-      cardContainer.innerHTML = rows.map(row => `
-        <div class="bg-white p-4 shadow rounded-xl text-blue-800">
-          <h2 class="text-xl font-semibold mb-2">${row.Name}</h2>
-          <p><strong>Geburtstag:</strong> ${row.Geburtstag}</p>
-          <p><strong>Geburtsort:</strong> ${row.Geburtsort}</p>
-          <p><strong>Sterbedatum:</strong> ${row.Sterbedatum}</p>
-          <p><strong>Sterbeort:</strong> ${row.Sterbeort}</p>
-          <p><strong>Quelle:</strong> ${row.Quelle}</p>
-          <p class="mt-2 text-sm text-gray-700">${row.Biografie}</p>
-          <p class="mt-2 text-sm"><strong>GND:</strong> ${row.GND}</p>
-        </div>`).join('');
+// Extract unique values and create facet checkboxes
+  function createFacetFilters() {
+  updateFacetCounts(data); // initial counts
+
+  // Event Listener für Sterbeort
+  document.getElementById("filterSterbeort").addEventListener("change", e => {
+    if (e.target.tagName === "INPUT") {
+      e.target.checked
+        ? activeFilters.sterbeorte.add(e.target.value)
+        : activeFilters.sterbeorte.delete(e.target.value);
+      applyFilters();
+    }
+  });
+
+  // Event Listener für Geburtsort
+  document.getElementById("filterGeburtsort").addEventListener("change", e => {
+    if (e.target.tagName === "INPUT") {
+      e.target.checked
+        ? activeFilters.geburtsorte.add(e.target.value)
+        : activeFilters.geburtsorte.delete(e.target.value);
+      applyFilters();
+    }
+  });
+}
+function updateFacetCounts(rows) {
+  const sterbeortDiv = document.getElementById("filterSterbeort");
+  const geburtsortDiv = document.getElementById("filterGeburtsort");
+
+  const sterbeorte = [...new Set(data.map(d => d.Sterbeort).filter(Boolean))];
+  const geburtsorte = [...new Set(data.map(d => d.Geburtsort).filter(Boolean))];
+
+  const sterbeortCounts = {};
+  const geburtsortCounts = {};
+
+  rows.forEach(r => {
+    if (r.Sterbeort) sterbeortCounts[r.Sterbeort] = (sterbeortCounts[r.Sterbeort] || 0) + 1;
+    if (r.Geburtsort) geburtsortCounts[r.Geburtsort] = (geburtsortCounts[r.Geburtsort] || 0) + 1;
+  });
+
+  sterbeortDiv.innerHTML = sterbeorte
+    .sort()
+    .map(o => `
+      <label class="flex items-center gap-1">
+        <input type="checkbox" value="${o}">
+        ${o} <span class="text-gray-500">(${sterbeortCounts[o] || 0})</span>
+      </label>
+    `)
+    .join("");
+
+  geburtsortDiv.innerHTML = geburtsorte
+    .sort()
+    .map(o => `
+      <label class="flex items-center gap-1">
+        <input type="checkbox" value="${o}">
+        ${o} <span class="text-gray-500">(${geburtsortCounts[o] || 0})</span>
+      </label>
+    `)
+    .join("");
+}
+
+
+function applyFilters() {
+  let rows = data.filter(row => {
+
+    // SEARCH
+    if (activeFilters.search) {
+      const s = activeFilters.search;
+      if (!Object.values(row).some(v => String(v).toLowerCase().includes(s))) return false;
     }
 
-    // Tabellenansicht rendern
-    function renderTable(rows) {
-      const tableBody = document.getElementById("tableBody");
-      tableBody.innerHTML = rows.map(row => `
-        <tr class="border-b">
-          <td class="px-4 py-2">${row.Name}</td>
-          <td class="px-4 py-2">${row.Geburtstag}</td>
-          <td class="px-4 py-2">${row.Geburtsort}</td>
-          <td class="px-4 py-2">${row.Sterbedatum}</td>
-          <td class="px-4 py-2">${row.Sterbeort}</td>
-          <td class="px-4 py-2">${row.Quelle}</td>
-          <td class="px-4 py-2">${row.Biografie}</td>
-          <td class="px-4 py-2">${row.GND}</td>
-        </tr>`).join('');
-    }
-  </script>
-  <!-- Map Container -->
-  <div id="map" class="w-full h-96 my-10 rounded-xl shadow"></div>
+    // Sterbeorte
+    if (activeFilters.sterbeorte.size > 0 &&
+        !activeFilters.sterbeorte.has(row.Sterbeort)) return false;
 
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    // Geburtsorte
+    if (activeFilters.geburtsorte.size > 0 &&
+        !activeFilters.geburtsorte.has(row.Geburtsort)) return false;
 
-  <script>
-    const map = L.map('map').setView([54.5, 9.5], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+    // Sterbejahre
+    const deathYear = row.Sterbedatum ? parseInt(row.Sterbedatum.substring(0,4)) : null;
+    if (activeFilters.deathMin && deathYear < activeFilters.deathMin) return false;
+    if (activeFilters.deathMax && deathYear > activeFilters.deathMax) return false;
 
-    async function geocode(place) {
-      if (!place) return null;
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place + ', Germany')}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      if (data && data[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-      return null;
-    }
+    // Geburtsjahre
+    const birthYear = row.Geburtstag ? parseInt(row.Geburtstag.substring(0,4)) : null;
+    if (activeFilters.birthMin && birthYear < activeFilters.birthMin) return false;
+    if (activeFilters.birthMax && birthYear > activeFilters.birthMax) return false;
 
-    async function renderMap(rows) {
-      map.eachLayer(layer => {
-        if (layer instanceof L.Marker) map.removeLayer(layer);
-      });
-      for (const row of rows) {
-        const birth = await gecode(row.Geburtsort);
-        if (birth) L.marker(birth).addTo(map).bindPopup(`<b>${row.Name}</b><br>Geburtsort: ${row.Geburtsort}`);
-        const death = await geocode(row.Sterbeort);
-        if (death) L.marker(death).addTo(map).bindPopup(`<b>${row.Name}</b><br>Sterbeort: ${row.Sterbeort}`);
-      }
-    }
-  </script>
+    return true;
+  });
+  
+function gndLink(gnd) {
+  if (!gnd || gnd.trim() === "") return "";
+  const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25`;
+  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;
+}
+  renderCards(rows);
+  function gndLink(gnd) {
+  if (!gnd || gnd.trim() === "") return "";
+  const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25`;
+  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;
+}
+
+  renderTable(rows);
+  renderMap(rows);
+}
+
+// Render CARD VIEW
+function renderCards(rows) {
+  document.getElementById("cardContainer").innerHTML = rows.map(row => `
+    <div class="bg-white p-4 shadow rounded-xl text-blue-800">
+      <h2 class="text-xl font-semibold mb-2">${row.Name}</h2>
+      <p><strong>Geburtstag:</strong> ${row.Geburtstag}</p>
+      <p><strong>Geburtsort:</strong> ${row.Geburtsort}</p>
+      <p><strong>Sterbedatum:</strong> ${row.Sterbedatum}</p>
+      <p><strong>Sterbeort:</strong> ${row.Sterbeort}</p>
+      <p><strong>GND:</strong> ${gndLink(row.GND)}</p>
+
+      <p class="mt-2 text-sm text-gray-700">${row.Biografie || ""}</p>
+    </div>`).join('');
+}
+
+// Table
+function renderTable(rows) {
+  document.getElementById("tableBody").innerHTML = rows.map(r => `
+    <tr class="border-b">
+      <td class="px-4 py-2">${r.Name}</td>
+      <td class="px-4 py-2">${r.Geburtstag}</td>
+      <td class="px-4 py-2">${r.Geburtsort}</td>
+      <td class="px-4 py-2">${r.Sterbedatum}</td>
+      <td class="px-4 py-2">${r.Sterbeort}</td>
+      <td class="px-4 py-2">${gndLink(r.GND)}</td>
+
+    </tr>`).join('');
+}
+
+// Map
+const map = L.map('map').setView([54.5, 9.5], 7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+}).addTo(map);
+
+async function geocode(place) {
+  if (!place) return null;
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place + ', Germany')}`;
+  const r = await fetch(url);
+  const d = await r.json();
+  return d[0] ? [parseFloat(d[0].lat), parseFloat(d[0].lon)] : null;
+}
+
+async function renderMap(rows) {
+  map.eachLayer(l => { if (l instanceof L.Marker) map.removeLayer(l); });
+
+  for (const row of rows) {
+    const birth = await geocode(row.Geburtsort);
+    if (birth) L.marker(birth).addTo(map).bindPopup(`<b>${row.Name}</b><br>Geburtsort: ${row.Geburtsort}`);
+
+    const death = await geocode(row.Sterbeort);
+    if (death) L.marker(death).addTo(map).bindPopup(`<b>${row.Name}</b><br>Sterbeort: ${row.Sterbeort}`);
+  }
+}
+</script>
+
 </body>
 </html>
