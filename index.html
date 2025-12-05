@@ -213,23 +213,18 @@ function applyFilters() {
     return true;
   });
   
-function gndLink(gnd) {
-  if (!gnd || gnd.trim() === "") return "";
-  const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25`;
-  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;
-}
-  renderCards(rows);
-  function gndLink(gnd) {
-  if (!gnd || gnd.trim() === "") return "";
-  const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25`;
-  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;
-}
 
+  renderCards(rows);
   renderTable(rows);
   renderMap(rows);
 }
 
 // Render CARD VIEW
+  function gndLink(gnd) {
+  if (!gnd || gnd.trim() === "") return "";
+  const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25`;
+  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;
+}
 function renderCards(rows) {
   document.getElementById("cardContainer").innerHTML = rows.map(row => `
     <div class="bg-white p-4 shadow rounded-xl text-blue-800">
@@ -245,6 +240,11 @@ function renderCards(rows) {
 }
 
 // Table
+  function gndLink(gnd) {
+  if (!gnd || gnd.trim() === "") return "";
+  const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25`;
+  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;
+}
 function renderTable(rows) {
   document.getElementById("tableBody").innerHTML = rows.map(r => `
     <tr class="border-b">
