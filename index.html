@@ -67,6 +67,9 @@
     <!-- Search -->
     <input id="searchInput" type="text" placeholder="Suche nach Name, Ort ..."
            class="w-full md:w-1/2 px-4 py-2 rounded-xl border border-gray-300 mb-6" />
+    
+    <!-- Map Container (moved up) -->
+    <div id="map" class="w-full h-96 my-10 rounded-xl shadow"></div>
 
     <!-- Card Container -->
     <div id="cardContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10"></div>
@@ -219,6 +222,22 @@ function applyFilters() {
   renderMap(rows);
 }
 
+  // Umschalten der Ansicht
+const cardContainer = document.getElementById("cardContainer");
+const tableContainer = document.getElementById("tableContainer");
+
+
+document.getElementById("cardViewBtn").onclick = () => {
+cardContainer.classList.remove("hidden");
+tableContainer.classList.add("hidden");
+};
+
+
+document.getElementById("tableViewBtn").onclick = () => {
+cardContainer.classList.add("hidden");
+tableContainer.classList.remove("hidden");
+};
+  
 // Render CARD VIEW
   function gndLink(gnd) {
   if (!gnd || gnd.trim() === "") return "";
@@ -258,32 +277,86 @@ function renderTable(rows) {
     </tr>`).join('');
 }
 
+  
 // Map
+</script>
+<!-- Map Container -->
+<div id="map" class="w-full h-96 my-10 rounded-xl shadow"></div>
+
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
+<script>
+// MarkerCluster Layer
+const birthCluster = L.markerClusterGroup();
+const deathCluster = L.markerClusterGroup();
+
+
 const map = L.map('map').setView([54.5, 9.5], 7);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
+maxZoom: 19,
+attribution: '© OpenStreetMap'
 }).addTo(map);
 
+
+// Cluster zur Karte hinzufügen
+birthCluster.addTo(map);
+deathCluster.addTo(map);('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+maxZoom: 19,
+attribution: '© OpenStreetMap'
+}).addTo(map);
+
+
 async function geocode(place) {
-  if (!place) return null;
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place + ', Germany')}`;
-  const r = await fetch(url);
-  const d = await r.json();
-  return d[0] ? [parseFloat(d[0].lat), parseFloat(d[0].lon)] : null;
+if (!place) return null;
+const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place + ', Germany')}`;
+const response = await fetch(url);
+const data = await response.json();
+if (data && data[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+return null;
 }
+
 
 async function renderMap(rows) {
-  map.eachLayer(l => { if (l instanceof L.Marker) map.removeLayer(l); });
+map.eachLayer(layer => {
+if (layer instanceof L.Marker) map.removeLayer(layer);
+});
+for (const row of rows) {
+const birth = await geocode(row.Geburtsort);
+if (birth) {
+const birthIcon = L.icon({
+iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+iconSize: [25, 41],
+iconAnchor: [12, 41],
+popupAnchor: [1, -34]
+});
+birthCluster.addLayer(
+L.marker(birth, { icon: birthIcon }).bindPopup(`<b>${row.Name}</b><br>Geburtsort: ${row.Geburtsort}`)
+);
+}
 
-  for (const row of rows) {
-    const birth = await geocode(row.Geburtsort);
-    if (birth) L.marker(birth).addTo(map).bindPopup(`<b>${row.Name}</b><br>Geburtsort: ${row.Geburtsort}`);
 
-    const death = await geocode(row.Sterbeort);
-    if (death) L.marker(death).addTo(map).bindPopup(`<b>${row.Name}</b><br>Sterbeort: ${row.Sterbeort}`);
-  }
+const death = await geocode(row.Sterbeort);
+if (death) {
+const deathIcon = L.icon({
+iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+iconSize: [25, 41],
+iconAnchor: [12, 41],
+popupAnchor: [1, -34]
+});
+deathCluster.addLayer(
+L.marker(death, { icon: deathIcon }).bindPopup(`<b>${row.Name}</b><br>Sterbeort: ${row.Sterbeort}`)
+);
+}
+}
 }
 </script>
-
+  
 </body>
 </html>
