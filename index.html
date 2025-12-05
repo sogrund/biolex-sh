@@ -247,7 +247,9 @@ tableContainer.classList.remove("hidden");
 function renderCards(rows) {
   document.getElementById("cardContainer").innerHTML = rows.map(row => `
     <div class="bg-white p-4 shadow rounded-xl text-blue-800">
-      <h2 class="text-xl font-semibold mb-2">${row.Name}</h2>
+      <a href="detail.html?id=${row.GND}" class="text-pink-700 font-semibold underline">
+    ${row.Name}
+</a>
       <p><strong>Geburtstag:</strong> ${row.Geburtstag}</p>
       <p><strong>Geburtsort:</strong> ${row.Geburtsort}</p>
       <p><strong>Sterbedatum:</strong> ${row.Sterbedatum}</p>
@@ -357,6 +359,81 @@ L.marker(death, { icon: deathIcon }).bindPopup(`<b>${row.Name}</b><br>Sterbeort:
 }
 }
 </script>
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Detailansicht</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="bg-gray-50 p-6">
+<div class="max-w-4xl mx-auto">
+<a href="index.html" class="text-blue-600">← Zurück</a>
+<h1 id="name" class="text-3xl font-bold mt-4 mb-4"></h1>
+
+
+<div id="info" class="bg-white p-4 rounded-xl shadow mb-6"></div>
+
+
+<div id="map" class="w-full h-96 rounded-xl shadow"></div>
+</div>
+
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const id = params.get('id');
+
+
+Papa.parse('data.csv', {
+download: true,
+header: true,
+complete: async function(results) {
+const rows = results.data;
+const row = rows.find(r => r.GND === id);
+
+
+document.getElementById('name').innerText = row.Name;
+document.getElementById('info').innerHTML = `
+<p><strong>Geburtstag:</strong> ${row.Geburtstag}</p>
+<p><strong>Geburtsort:</strong> ${row.Geburtsort}</p>
+<p><strong>Sterbedatum:</strong> ${row.Sterbedatum}</p>
+<p><strong>Sterbeort:</strong> ${row.Sterbeort}</p>
+<p class="mt-2">${row.Biografie}</p>`;
+
+
+const map = L.map('map').setView([54.5, 9.5], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+maxZoom: 19,
+attribution: '© OpenStreetMap'
+}).addTo(map);
+
+
+async function geocode(place) {
+if (!place) return null;
+const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place + ', Germany')}`;
+const res = await fetch(url);
+const data = await res.json();
+if (data && data[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+return null;
+}
+
+
+const birth = await geocode(row.Geburtsort);
+const death = await geocode(row.Sterbeort);
+
+
+if (birth) L.marker(birth).addTo(map).bindPopup("Geburtsort: " + row.Geburtsort);
+if (death) L.marker(death).addTo(map).bindPopup("Sterbeort: " + row.Sterbeort);
+}
+});
+</script>
+</body>
+</html> 
   
 </body>
 </html>
