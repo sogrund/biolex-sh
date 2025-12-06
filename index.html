@@ -116,29 +116,55 @@ Papa.parse(csvUrl, {
   header: true,
   complete: function(results) {
     data = results.data;
-
-    createFacetFilters();
-    applyFilters();
+    applyFilters();   // erzeugt die Facetten beim ersten Laden
   }
 });
 
-// Extract unique values and create facet checkboxes
-function createFacetFilters() {
+
+/* ----------------------------------------------------
+   FACETTEN NEU BERECHNEN (LIVE) + TOP-10 ANZEIGEN
+---------------------------------------------------- */
+function updateFacetFilters(filteredData) {
   const sterbeortDiv = document.getElementById("filterSterbeort");
   const geburtsortDiv = document.getElementById("filterGeburtsort");
 
-  // Unique sorted lists
-  const sterbeorte = [...new Set(data.map(d => d.Sterbeort).filter(Boolean))].sort();
-  const geburtsorte = [...new Set(data.map(d => d.Geburtsort).filter(Boolean))].sort();
+  // Häufigkeiten berechnen
+  function getTop10(data, field) {
+    const counts = {};
+    data.forEach(d => {
+      const v = d[field];
+      if (!v) return;
+      counts[v] = (counts[v] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort((a,b) => b[1] - a[1])
+      .slice(0, 10); // Top-10
+  }
 
-  sterbeorte.forEach(o => {
-    sterbeortDiv.innerHTML += `<label><input type="checkbox" value="${o}" class="sterbeortCB"> ${o}</label><br>`;
-  });
-  geburtsorte.forEach(o => {
-    geburtsortDiv.innerHTML += `<label><input type="checkbox" value="${o}" class="geburtsortCB"> ${o}</label><br>`;
+  const topSterbeorte = getTop10(data, "Sterbeort");
+  const topGeburtsorte = getTop10(data, "Geburtsort");
+
+  sterbeortDiv.innerHTML = "";
+  topSterbeorte.forEach(([o, count]) => {
+    const checked = activeFilters.sterbeorte.has(o) ? "checked" : "";
+    sterbeortDiv.innerHTML += `
+      <label>
+        <input type="checkbox" value="${o}" class="sterbeortCB" ${checked}>
+        ${o} <span class="text-gray-500 text-sm">(${count})</span>
+      </label><br>`;
   });
 
-  // Checkboxes
+  geburtsortDiv.innerHTML = "";
+  topGeburtsorte.forEach(([o, count]) => {
+    const checked = activeFilters.geburtsorte.has(o) ? "checked" : "";
+    geburtsortDiv.innerHTML += `
+      <label>
+        <input type="checkbox" value="${o}" class="geburtsortCB" ${checked}>
+        ${o} <span class="text-gray-500 text-sm">(${count})</span>
+      </label><br>`;
+  });
+
+  // Checkbox Events neu binden
   document.querySelectorAll(".sterbeortCB").forEach(cb =>
     cb.addEventListener("change", () => {
       cb.checked ? activeFilters.sterbeorte.add(cb.value) : activeFilters.sterbeorte.delete(cb.value);
@@ -152,19 +178,19 @@ function createFacetFilters() {
       applyFilters();
     })
   );
-
-  // Range inputs
-  document.getElementById("deathYearMin").addEventListener("input", e => { activeFilters.deathMin = e.target.value; applyFilters(); });
-  document.getElementById("deathYearMax").addEventListener("input", e => { activeFilters.deathMax = e.target.value; applyFilters(); });
-
-  document.getElementById("birthYearMin").addEventListener("input", e => { activeFilters.birthMin = e.target.value; applyFilters(); });
-  document.getElementById("birthYearMax").addEventListener("input", e => { activeFilters.birthMax = e.target.value; applyFilters(); });
-
-  document.getElementById("searchInput").addEventListener("input", e => {
-    activeFilters.search = e.target.value.toLowerCase();
-    applyFilters();
-  });
 }
+
+
+
+/* ----------------------------------------------------
+   FILTER LOGIK
+---------------------------------------------------- */
+document.getElementById("deathYearMin").addEventListener("input", e => { activeFilters.deathMin = e.target.value; applyFilters(); });
+document.getElementById("deathYearMax").addEventListener("input", e => { activeFilters.deathMax = e.target.value; applyFilters(); });
+document.getElementById("birthYearMin").addEventListener("input", e => { activeFilters.birthMin = e.target.value; applyFilters(); });
+document.getElementById("birthYearMax").addEventListener("input", e => { activeFilters.birthMax = e.target.value; applyFilters(); });
+document.getElementById("searchInput").addEventListener("input", e => { activeFilters.search = e.target.value.toLowerCase(); applyFilters(); });
+
 
 function applyFilters() {
   let rows = data.filter(row => {
@@ -196,12 +222,19 @@ function applyFilters() {
     return true;
   });
 
+  // Facetten auf Basis DERZEITIGER Daten neu generieren
+  updateFacetFilters(rows);
+
   renderCards(rows);
   renderTable(rows);
   renderMap(rows);
 }
 
-// Render CARD VIEW
+
+
+/* ----------------------------------------------------
+   CARD VIEW
+---------------------------------------------------- */
 function renderCards(rows) {
   document.getElementById("cardContainer").innerHTML = rows.map(row => `
     <div class="bg-white p-4 shadow rounded-xl text-blue-800">
@@ -214,7 +247,10 @@ function renderCards(rows) {
     </div>`).join('');
 }
 
-// Table
+
+/* ----------------------------------------------------
+   TABLE VIEW
+---------------------------------------------------- */
 function renderTable(rows) {
   document.getElementById("tableBody").innerHTML = rows.map(r => `
     <tr class="border-b">
@@ -226,11 +262,12 @@ function renderTable(rows) {
     </tr>`).join('');
 }
 
-// Map
+
+/* ----------------------------------------------------
+   MAP
+---------------------------------------------------- */
 const map = L.map('map').setView([54.5, 9.5], 7);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
 async function geocode(place) {
   if (!place) return null;
@@ -252,6 +289,7 @@ async function renderMap(rows) {
   }
 }
 </script>
+
 
 </body>
 </html>
