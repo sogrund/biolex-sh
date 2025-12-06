@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personendetail</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- PapaParse -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+
+<body class="bg-gray-100 p-6">
+
+<a href="index.html" class="text-blue-600 underline text-sm mb-4 inline-block">← Zurück</a>
+
+<div id="content" class="bg-white shadow rounded-xl p-6"></div>
+
+<div id="map" class="w-full h-96 mt-6 rounded-xl shadow"></div>
+
+<script>
+const csvUrl = "data.csv";
+let person = null;
+
+// Get ID from URL
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+// Load CSV
+Papa.parse(csvUrl, {
+  download: true,
+  header: true,
+  complete: r => {
+    const all = r.data;
+    person = all.find(p => p.GND === id);
+    renderPerson();
+    renderMap();
+  }
+});
+
+
+function renderPerson() {
+  if (!person) {
+    document.getElementById("content").innerHTML = "<p>Person nicht gefunden.</p>";
+    return;
+  }
+
+  document.getElementById("content").innerHTML = `
+    <h1 class="text-3xl text-pink-600 font-bold mb-4">${person.Name}</h1>
+
+    <p><strong>Geburtstag:</strong> ${person.Geburtstag}</p>
+    <p><strong>Geburtsort:</strong> ${person.Geburtsort}</p>
+
+    <p class="mt-2"><strong>Sterbedatum:</strong> ${person.Sterbedatum}</p>
+    <p><strong>Sterbeort:</strong> ${person.Sterbeort}</p>
+
+    <p class="mt-4 text-gray-700 text-lg">${person.Biografie || ""}</p>
+  `;
+}
+
+
+async function geocode(place) {
+  if (!place) return null;
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}`;
+  const r = await fetch(url);
+  const j = await r.json();
+  if (j && j[0]) return [parseFloat(j[0].lat), parseFloat(j[0].lon)];
+  return null;
+}
+
+
+async function renderMap() {
+  if (!person) return;
+
+  const map = L.map("map").setView([54.5, 9.5], 7);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19
+  }).addTo(map);
+
+  // Icons
+  const birthIcon = new L.Icon({
+    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
+  });
+
+  const deathIcon = new L.Icon({
+    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
+  });
+
+  // Add markers
+  if (person.Geburtsort) {
+    const loc = await geocode(person.Geburtsort);
+    if (loc)
+      L.marker(loc, {icon: birthIcon})
+        .addTo(map)
+        .bindPopup(`<b>${person.Name}</b><br>Geburtsort: ${person.Geburtsort}`);
+  }
+
+  if (person.Sterbeort) {
+    const loc = await geocode(person.Sterbeort);
+    if (loc)
+      L.marker(loc, {icon: deathIcon})
+        .addTo(map)
+        .bindPopup(`<b>${person.Name}</b><br>Sterbeort: ${person.Sterbeort}`);
+  }
+}
+</script>
+
+</body>
+</html>
