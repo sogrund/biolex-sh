@@ -239,6 +239,9 @@ function renderCards(rows) {
   document.getElementById("cardContainer").innerHTML = rows.map(row => `
     <div class="bg-white p-4 shadow rounded-xl text-blue-800">
       <h2 class="text-xl font-semibold mb-2">${row.Name}</h2>
+      <a href="detail.html?id=${row.GND}" class="text-pink-700 font-semibold underline">
+    ${row.Name}
+</a>
       <p><strong>Geburtstag:</strong> ${row.Geburtstag}</p>
       <p><strong>Geburtsort:</strong> ${row.Geburtsort}</p>
       <p><strong>Sterbedatum:</strong> ${row.Sterbedatum}</p>
@@ -255,10 +258,12 @@ function renderTable(rows) {
   document.getElementById("tableBody").innerHTML = rows.map(r => `
     <tr class="border-b">
       <td class="px-4 py-2">${r.Name}</td>
+
       <td class="px-4 py-2">${r.Geburtstag}</td>
       <td class="px-4 py-2">${r.Geburtsort}</td>
       <td class="px-4 py-2">${r.Sterbedatum}</td>
-      <td class="px-4 py-2">${r.Sterbeort}</td>
+      <td class="px-4 py-2">${r.Sterbeort}</td> 
+      <td class="px-4 py-2">${r.GND}</td>
     </tr>`).join('');
 }
 
