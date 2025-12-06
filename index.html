@@ -17,6 +17,12 @@
   <!-- MarkerCluster CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+    <style>
+    .banner-blue {
+      background-color: #071E49; /* RGB 7,30,73  → entspricht Pantone 289c */
+    }
+  </style>
 </head>
 
 <body class="bg-gray-100">
@@ -66,11 +72,23 @@
   <!-- Main Content -->
   <main class="flex-1 p-6">
 
-    <h1 class="text-3xl font-bold mb-6 text-pink-600">Personenlexikon Schleswig-Holstein</h1>
+        <!-- 🔵 BANNER -->
+    <div class="banner-blue w-full px-6 py-10 shadow-lg">
+      <h1 class="text-4xl font-bold mb-4 text-white">Personenlexikon Schleswig-Holstein</h1>
 
-    <!-- Search -->
-    <input id="searchInput" type="text" placeholder="Suche nach Name, Ort …"
-           class="w-full md:w-1/2 px-4 py-2 rounded-xl border border-gray-300 mb-6" />
+      <p class="text-white max-w-3xl leading-relaxed mb-6">
+        Suchen Sie in über 1800 Einträgen des in 13 Bänden zwischen 1971 und 2011 erschienenen
+        <em>Biographischen Lexikons für Schleswig-Holstein und Lübeck</em>. Sie finden hier Kurzbiografien
+        zu bedeutenden Personen und Familien Schleswig-Holsteins, darunter Künstler, Wissenschaftler,
+        Politiker, Geistliche, Unternehmer und viele weitere, die in Schleswig-Holstein geboren wurden
+        oder maßgeblich gewirkt haben.
+      </p>
+
+      <!-- Search field INSIDE banner -->
+      <input id="searchInput" type="text" placeholder="Suche nach Name, Ort …"
+             class="w-full md:w-1/2 px-4 py-3 rounded-xl border border-gray-300" />
+    </div>
+
 
     <!-- Map -->
     <div id="map" class="w-full h-96 mb-10 rounded-xl shadow"></div>
