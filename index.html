@@ -1,92 +1,111 @@
 <!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personenlexikon Schleswig-Holstein</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-</head>
-<body class="bg-gray-50 p-6">
-  <h1 class="text-3xl font-bold mb-6 text-pink-600">Personenlexikon Schleswig-Holstein</h1>
+<div id="filterGeburtsort" class="space-y-1"></div>
+</div>
 
-  <div id="map" class="w-full h-96 mb-10 rounded-xl shadow"></div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="bg-white p-4 rounded-xl shadow">
-      <h2 class="font-bold mb-2">Filter: Sterbeort</h2>
-      <div id="filterSterbeort" class="space-y-1"></div>
+<div class="md:col-span-2">
+<input id="search" type="text" placeholder="Suche..." class="w-full mb-4 p-2 rounded border" />
+<div id="cards" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+</div>
+</div>
 
-      <h2 class="font-bold mt-4 mb-2">Filter: Geburtsort</h2>
-      <div id="filterGeburtsort" class="space-y-1"></div>
-    </div>
-
-    <div class="md:col-span-2">
-      <input id="search" type="text" placeholder="Suche..." class="w-full mb-4 p-2 rounded border" />
-      <div id="cards" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-    </div>
-  </div>
 
 <script>
 let data = [];
 let activeFilters = {
-  sterbeorte: new Set(),
-  geburtsorte: new Set()
+sterbeorte: new Set(),
+geburtsorte: new Set()
 };
 
+
 Papa.parse('data.csv', {
-  download: true,
-  header: true,
-  complete: function(results) {
-    data = results.data;
-    initMap();
-    renderCards(data);
-    createFacetFilters();
-  }
+download: true,
+header: true,
+complete: function(results) {
+data = results.data;
+initMap();
+renderCards(data);
+createFacetFilters();
+}
 });
+
 
 // ------------------- MAP -------------------
 let map;
 let markers;
 
+
 function initMap() {
-  map = L.map('map').setView([54.5, 9.5], 6);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap'
-  }).addTo(map);
-  markers = L.markerClusterGroup();
-  map.addLayer(markers);
-  updateMap(data);
+map = L.map('map').setView([54.5, 9.5], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+maxZoom: 19,
+attribution: '© OpenStreetMap'
+}).addTo(map);
+markers = L.markerClusterGroup();
+map.addLayer(markers);
+updateMap(data);
 }
+
 
 async function geocode(place) {
-  if (!place) return null;
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place + ', Germany')}`;
-  const res = await fetch(url);
-  const result = await res.json();
-  if (result[0]) return [parseFloat(result[0].lat), parseFloat(result[0].lon)];
-  return null;
+if (!place) return null;
+const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place + ', Germany')}`;
+const res = await fetch(url);
+const result = await res.json();
+if (result[0]) return [parseFloat(result[0].lat), parseFloat(result[0].lon)];
+return null;
 }
+
 
 async function updateMap(rows) {
-  markers.clearLayers();
-  for (const person of rows) {
-    if (person.Geburtsort) {
-      const loc = await geocode(person.Geburtsort);
-      if (loc) markers.addLayer(L.marker(loc, {icon: blueIcon}).bindPopup(`<b>${person.Name}</b><br>Geburtsort: ${person.Geburtsort}`));
-    }
-    if (person.Sterbeort) {
-      const loc = await geocode(person.Sterbeort);
-      if (loc) markers.addLayer(L.marker(loc, {icon: redIcon}).bindPopup(`<b>${person.Name}</b><br>Sterbeort: ${person.Sterbeort}`));
-    }
-  }
+markers.clearLayers();
+for (const person of rows) {
+if (person.Geburtsort) {
+const loc = await geocode(person.Geburtsort);
+if (loc) markers.addLayer(L.marker(loc, {icon: blueIcon}).bindPopup(`<b>${person.Name}</b><br>Geburtsort: ${person.Geburtsort}`));
+}
+if (person.Sterbeort) {
+const loc = await geocode(person.Sterbeort);
+if (loc) markers.addLayer(L.marker(loc, {icon: redIcon}).bindPopup(`<b>${person.Name}</b><br>Sterbeort: ${person.Sterbeort}`));
+}
+}
 }
 
+
 const blueIcon = new L.Icon({
-  iconUrl: 'https://raw.githu
+iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+});
+
+
+const redIcon = new L.Icon({
+iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+});
+
+
+// ------------------- FACETTEN -------------------
+function createFacetFilters() {
+updateFacetCounts(data);
+
+
+document.getElementById("filterSterbeort").addEventListener("change", e => {
+if (e.target.tagName === "INPUT") {
+e.target.checked ? activeFilters.sterbeorte.add(e.target.value) : activeFilters.sterbeorte.delete(e.target.value);
+applyFilters();
+}
+});
+
+
+document.getElementById("filterGeburtsort").addEventListener("change", e => {
+if (e.target.tagName === "INPUT") {
+e.target.checked ? activeFilters.geburtsorte.add(e.target.value) : activeFilters.geburtsorte.delete(e.target.value);
+applyFilters();
+}
+});
+}
+
+
+function updateFacetCounts(rows) {
+const sterbeortDiv = document.getElementById("filterSterbeort");
+const geburtsortDiv = document.getElementById("filterGeburtsort");
