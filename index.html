@@ -226,17 +226,7 @@ function applyFilters() {
   });
 
   updateFacetFilters(rows);
-  function gndLink(gnd) {
-  if (!gnd || gnd.trim() === "") return "";
-  const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25`;
-  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;
-}
   renderCards(rows);
-  function gndLink(gnd) {
-  if (!gnd || gnd.trim() === "") return "";
-  const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25`;
-  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;
-}
   renderTable(rows);
   renderMap(rows);
 }
@@ -245,7 +235,12 @@ function applyFilters() {
 /* ---------------------------
    CARDS
 ---------------------------- */
-function renderCards(rows) {
+  function gndLink(gnd) {
+  if (!gnd || gnd.trim() === "") return "";
+  const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25`;
+  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;  
+}
+  function renderCards(rows) {
   document.getElementById("cardContainer").innerHTML = rows.map(row => `
     <div class="bg-white p-4 shadow rounded-xl text-blue-800">
       <a href="detail.html?id=${row.GND}" class="text-pink-700 text-xl font-bold underline">
@@ -265,7 +260,12 @@ function renderCards(rows) {
 /* ---------------------------
    TABLE
 ---------------------------- */
-function renderTable(rows) {
+  function gndLink(gnd) {
+  if (!gnd || gnd.trim() === "") return "";
+  const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25`;
+  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;
+}
+  function renderTable(rows) {
   document.getElementById("tableBody").innerHTML = rows.map(r => `
     <tr class="border-b">
       <td class="px-4 py-2">
