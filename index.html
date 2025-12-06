@@ -267,61 +267,91 @@ function renderTable(rows) {
     </tr>`).join('');
 }
 
-
+  
 /* ----------------------------------------------------
    MAP
 ---------------------------------------------------- */
-</script>
-<!-- Map Container -->
+  
+  <!-- Map Container -->
 <div id="map" class="w-full h-96 my-10 rounded-xl shadow"></div>
-
 
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Leaflet MarkerCluster CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+<!-- MARKER CLUSTER JS -->
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
 <script>
-// MarkerCluster Layer
+// Karte init
+const map = L.map('map').setView([54.5, 9.5], 7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap'
+}).addTo(map);
+
+// Cluster-Gruppen
 const birthCluster = L.markerClusterGroup();
 const deathCluster = L.markerClusterGroup();
 
+map.addLayer(birthCluster);
+map.addLayer(deathCluster);
 
-const map = L.map('map').setView([54.5, 9.5], 7);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-maxZoom: 19,
-attribution: '© OpenStreetMap'
-}).addTo(map);
+// Marker-Farben
+const birthIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+});
 
+const deathIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+});
 
-// Cluster zur Karte hinzufügen
-birthCluster.addTo(map);
-deathCluster.addTo(map);('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-maxZoom: 19,
-attribution: '© OpenStreetMap'
-}).addTo(map);
-
-
+// Geocoding
 async function geocode(place) {
-if (!place) return null;
-const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place + ', Germany')}`;
-const response = await fetch(url);
-const data = await response.json();
-if (data && data[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-return null;
+  if (!place) return null;
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  if (data && data[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+  return null;
 }
 
-
+// Marker rendern
 async function renderMap(rows) {
-map.eachLayer(layer => {
-if (layer instanceof L.Marker) map.removeLayer(layer);
-});
-for (const row of rows) {
-const birth = await geocode(row.Geburtsort);
+  birthCluster.clearLayers();
+  deathCluster.clearLayers();
+
+  for (const person of rows) {
+    if (person.Geburtsort) {
+      const loc = await geocode(person.Geburtsort);
+      if (loc)
+        birthCluster.addLayer(
+          L.marker(loc, { icon: birthIcon }).bindPopup(
+            `<b>${person.Name}</b><br>Geburtsort: ${person.Geburtsort}`
+          )
+        );
+    }
+
+    if (person.Sterbeort) {
+      const loc = await geocode(person.Sterbeort);
+      if (loc)
+        deathCluster.addLayer(
+          L.marker(loc, { icon: deathIcon }).bindPopup(
+            `<b>${person.Name}</b><br>Sterbeort: ${person.Sterbeort}`
+          )
+        );
+    }
+  }
+}
 </script>
-  
-  
 
 </body>
 </html>
