@@ -29,12 +29,10 @@
 <header class="banner-blue w-full px-6 py-10 shadow-lg">
   <h1 class="text-4xl font-bold mb-4 text-white">Personenlexikon Schleswig-Holstein</h1>
 
-  <p class="text-white max-w-3xl leading-relaxed mb-6">
-    Suchen Sie in über 1800 Einträgen des in 13 Bänden zwischen 1971 und 2011 erschienenen
-    <em>Biographischen Lexikons für Schleswig-Holstein und Lübeck</em>. Sie finden hier Kurzbiografien
-        zu bedeutenden Personen und Familien Schleswig-Holsteins, darunter Künstler, Wissenschaftler,
-        Politiker, Geistliche, Unternehmer und viele weitere, die in Schleswig-Holstein geboren wurden
-        oder maßgeblich gewirkt haben.
+  <p class="text-white w-full max-w-3xl leading-relaxed mb-6">
+    Suchen Sie in über 1800 Einträgen des in 13 Bänden zwischen 1971 und 2011 erschienenen <em>Biographischen Lexikons für Schleswig-Holstein und Lübeck</em>. Sie finden hier Kurzbiografien 
+    zu bedeutenden Personen und Familien Schleswig-Holsteins, darunter Künstler, Wissenschaftler, Politiker, Geistliche, Unternehmer und viele weitere, die in Schleswig-Holstein geboren wurden
+    oder maßgeblich gewirkt haben.
   </p>
 
   <!-- Search field INSIDE banner -->
@@ -50,17 +48,28 @@
   <aside class="w-72 bg-white shadow h-screen p-4 overflow-y-auto">
     <h2 class="text-xl font-semibold mb-4">🔍 Filter</h2>
 
+   <!-- Geburtsort -->
+    <details class="mb-4">
+      <summary class="cursor-pointer font-medium">Geburtsort</summary>
+      <div id="filterGeburtsort" class="mt-2 space-y-1"></div>
+    </details>   
+    
     <!-- Sterbeort -->
     <details class="mb-4">
       <summary class="cursor-pointer font-medium">Sterbeort</summary>
       <div id="filterSterbeort" class="mt-2 space-y-1"></div>
     </details>
 
-    <!-- Geburtsort -->
+   <!-- Geburtsdatum -->
     <details class="mb-4">
-      <summary class="cursor-pointer font-medium">Geburtsort</summary>
-      <div id="filterGeburtsort" class="mt-2 space-y-1"></div>
-    </details>
+      <summary class="cursor-pointer font-medium">Geburtsdatum (Jahre)</summary>
+      <div class="mt-2">
+        <label>von</label>
+        <input id="birthYearMin" type="number" class="w-full border rounded p-1 mb-2">
+        <label>bis</label>
+        <input id="birthYearMax" type="number" class="w-full border rounded p-1">
+      </div>
+    </details>  
 
     <!-- Sterbedatum -->
     <details class="mb-4">
@@ -70,17 +79,6 @@
         <input id="deathYearMin" type="number" class="w-full border rounded p-1 mb-2">
         <label>bis</label>
         <input id="deathYearMax" type="number" class="w-full border rounded p-1">
-      </div>
-    </details>
-
-    <!-- Geburtsdatum -->
-    <details class="mb-4">
-      <summary class="cursor-pointer font-medium">Geburtsdatum (Jahre)</summary>
-      <div class="mt-2">
-        <label>von</label>
-        <input id="birthYearMin" type="number" class="w-full border rounded p-1 mb-2">
-        <label>bis</label>
-        <input id="birthYearMax" type="number" class="w-full border rounded p-1">
       </div>
     </details>
 
