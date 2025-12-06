@@ -24,11 +24,25 @@
     }
   </style>
 </head>
-
+  
 <body class="bg-gray-100">
 
 <div class="flex">
+  
+<!-- BANNER OBEN VOLLBREITE -->
+<header class="banner-blue w-full px-6 py-10 shadow-lg">
+  <h1 class="text-4xl font-bold mb-4 text-white">Personenlexikon Schleswig-Holstein</h1>
 
+  <p class="text-white max-w-3xl leading-relaxed mb-6">
+    Suchen Sie in über 1800 Einträgen des in 13 Bänden zwischen 1971 und 2011 erschienenen
+    <em>Biographischen Lexikons für Schleswig-Holstein und Lübeck</em>. …
+  </p>
+
+  <!-- Search field INSIDE banner -->
+  <input id="searchInput" type="text" placeholder="Suche nach Name, Ort …"
+        class="w-full md:w-1/2 px-4 py-3 rounded-xl border border-gray-300" />
+</header>
+  
   <!-- Sidebar -->
   <aside class="w-72 bg-white shadow h-screen p-4 overflow-y-auto">
     <h2 class="text-xl font-semibold mb-4">🔍 Filter</h2>
@@ -71,24 +85,6 @@
 
   <!-- Main Content -->
   <main class="flex-1 p-6">
-
-        <!-- 🔵 BANNER -->
-    <div class="banner-blue w-full px-6 py-10 shadow-lg">
-      <h1 class="text-4xl font-bold mb-4 text-white">Personenlexikon Schleswig-Holstein</h1>
-
-      <p class="text-white max-w-3xl leading-relaxed mb-6">
-        Suchen Sie in über 1800 Einträgen des in 13 Bänden zwischen 1971 und 2011 erschienenen
-        <em>Biographischen Lexikons für Schleswig-Holstein und Lübeck</em>. Sie finden hier Kurzbiografien
-        zu bedeutenden Personen und Familien Schleswig-Holsteins, darunter Künstler, Wissenschaftler,
-        Politiker, Geistliche, Unternehmer und viele weitere, die in Schleswig-Holstein geboren wurden
-        oder maßgeblich gewirkt haben.
-      </p>
-
-      <!-- Search field INSIDE banner -->
-      <input id="searchInput" type="text" placeholder="Suche nach Name, Ort …"
-             class="w-full md:w-1/2 px-4 py-3 rounded-xl border border-gray-300" />
-    </div>
-
 
     <!-- Map -->
     <div id="map" class="w-full h-96 mb-10 rounded-xl shadow"></div>
