@@ -59,6 +59,7 @@ function renderPerson() {
 
     <p class="mt-2"><strong>Sterbedatum:</strong> ${person.Sterbedatum}</p>
     <p><strong>Sterbeort:</strong> ${person.Sterbeort}</p>
+     <p><strong>GND:</strong> ${gndLink(person.GND)}</p>
 
     <p class="mt-4 text-gray-700 text-lg">${person.Biografie || ""}</p>
   `;
