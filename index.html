@@ -237,7 +237,7 @@ function applyFilters() {
 ---------------------------- */
   function gndLink(gnd) {
   if (!gnd || gnd.trim() === "") return "";
-  const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25&pos=1`;
+  const url = `https://explore.gnd.network/${encodeURIComponent(gnd)}`;
   return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;  
 }
   function renderCards(rows) {
