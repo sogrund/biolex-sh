@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Personendetail</title>
 
   <!-- Tailwind -->
@@ -12,299 +12,147 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <!-- Prompt Font -->
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: "Prompt", sans-serif; }
+    /* Lightbox */
+    #lightbox { display: none; }
+    #lightbox.show { display: flex; }
+    /* GND network iframe */
+    #gndNetwork { width: 100%; border: none; min-height: 40vh; height: 60vh; }
   </style>
 </head>
 
 <body class="bg-gray-100 p-6">
 
-<a href="index.html" class="text-blue-600 underline text-sm mb-4 inline-block">← Zurück</a>
+  <a href="index.html" class="text-blue-600 underline text-sm mb-4 inline-block">← Zurück</a>
 
-<div id="content" class="bg-white shadow rounded-xl p-6"></div>
+  <!-- MAIN HEADER (Person + image + meta) -->
+  <div id="personHeader" class="bg-white shadow rounded-xl p-6 mb-6"></div>
 
-<!-- Map -->
-<div id="map" class="w-full h-96 mt-6 rounded-xl shadow"></div>
+  <!-- Tabs -->
+  <div class="bg-white shadow rounded-xl mb-6">
+    <div class="flex border-b">
+      <button class="tabBtn px-4 py-3 font-medium" data-tab="bio">Biografie</button>
+      <button class="tabBtn px-4 py-3 font-medium" data-tab="network">Netzwerk</button>
+      <button class="tabBtn px-4 py-3 font-medium" data-tab="map">Karte</button>
+    </div>
+    <div id="tabContent" class="p-6"></div>
+  </div>
 
-
-<!-- 🔍 LIGHTBOX OVERLAY -->
-<div id="lightbox"
-     class="hidden fixed inset-0 bg-black/80 items-center justify-center z-50 p-4">
-  <img id="lightbox-img" class="max-h-full max-w-full rounded-xl shadow-2xl">
-</div>
-
+  <!-- Lightbox -->
+  <div id="lightbox" class="fixed inset-0 bg-black/80 items-center justify-center z-50 p-4">
+    <img id="lightbox-img" class="max-h-full max-w-full rounded-xl shadow-2xl" alt="Vollbild">
+  </div>
 
 <script>
+/* -------------------------
+   CONFIG / STATE
+------------------------- */
 const csvUrl = "data.csv";
 let person = null;
+let mapInitialized = false;
 
-// URL Parameter (GND)
+/* GND from URL */
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
-// CSV laden
-Papa.parse(csvUrl, {
-  download: true,
-  header: true,
-  complete: async r => {
-    const all = r.data;
-    person = all.find(p => p.GND === id);
+/* -------------------------
+   HELPERS
+------------------------- */
+function isBlank(s){ return s === null || s === undefined || String(s).trim() === ""; }
 
-    const imageUrl = await fetchWikimediaImage(person);
-    renderPerson(imageUrl);
-    renderMap();
-  }
-});
-
- 
-  
-/* ------------------------------------------------------
-   🔍 WIKIMEDIA-FOTO LADEN
------------------------------------------------------- */
-async function fetchWikimediaImage(p) {
-  if (!p) return null;
-
-  if (p.BildURL) return p.BildURL.trim();
-  if (p.Bild) return p.Bild.trim();
-  if (p.Wikimedia) return p.Wikimedia.trim();
-
-  if (p.Wikidata) {
-    try {
-      const api = `https://www.wikidata.org/wiki/Special:EntityData/${p.Wikidata}.json`;
-      const res = await fetch(api);
-      const json = await res.json();
-      const entity = json.entities[p.Wikidata];
-
-      if (!entity || !entity.claims || !entity.claims.P18) return null;
-
-      const filename = entity.claims.P18[0].mainsnak.datavalue.value;
-
-      const commonsAPI =
-        "https://commons.wikimedia.org/w/api.php?action=query&titles=File:" +
-        encodeURIComponent(filename) +
-        "&prop=imageinfo&iiprop=url&format=json&origin=*";
-
-      const imgRes = await fetch(commonsAPI);
-      const imgJson = await imgRes.json();
-
-      const key = Object.keys(imgJson.query.pages)[0];
-      return imgJson.query.pages[key].imageinfo[0].url;
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
+function gndLink(id){
+  if(!id) return "";
+  return `<a class="underline text-blue-700" href="https://d-nb.info/gnd/${id}" target="_blank">${id}</a>`;
 }
 
+/* -------------------------
+   WIKIMEDIA: Bild holen
+   - prüft mehrere Felder in CSV
+   - wenn Wikidata vorhanden: holt P18 filename → Commons imageinfo → URL
+------------------------- */
+async function fetchWikimediaImage(p){
+  if(!p) return null;
+  // direkte Felder
+  if(p.BildURL && !isBlank(p.BildURL)) return p.BildURL.trim();
+  if(p.Bild && !isBlank(p.Bild)) return p.Bild.trim();
+  if(p.Wikimedia && !isBlank(p.Wikimedia)) return p.Wikimedia.trim();
 
-/* ------------------------------------------------------
-   PERSON ANZEIGEN
------------------------------------------------------- */
-function renderPerson(imageUrl) {
-  if (!person) {
-    document.getElementById("content").innerHTML =
-      "<p>Person nicht gefunden.</p>";
+  // Wikidata id vorhanden?
+  const wd = p.Wikidata || p.wikidata || p.WD || p.wd;
+  if(!wd || isBlank(wd)) return null;
+
+  try{
+    const api = `https://www.wikidata.org/wiki/Special:EntityData/${encodeURIComponent(wd)}.json`;
+    const res = await fetch(api);
+    if(!res.ok) return null;
+    const json = await res.json();
+    const entity = json.entities && json.entities[wd];
+    if(!entity || !entity.claims || !entity.claims.P18) return null;
+
+    const filename = entity.claims.P18[0].mainsnak.datavalue.value;
+    const commonsAPI = "https://commons.wikimedia.org/w/api.php?action=query&titles=File:" +
+      encodeURIComponent(filename) +
+      "&prop=imageinfo&iiprop=url&format=json&origin=*";
+
+    const imgRes = await fetch(commonsAPI);
+    if(!imgRes.ok) return null;
+    const imgJson = await imgRes.json();
+    const pages = imgJson.query && imgJson.query.pages;
+    if(!pages) return null;
+    const key = Object.keys(pages)[0];
+    const info = pages[key].imageinfo && pages[key].imageinfo[0];
+    return info ? info.url : null;
+  } catch(e){
+    console.warn("Wikimedia fetch failed", e);
+    return null;
+  }
+}
+
+/* -------------------------
+   RENDER: Header (Name, meta, Bild)
+------------------------- */
+function renderHeader(imageUrl){
+  if(!person){
+    document.getElementById("personHeader").innerHTML = "<p>Person nicht gefunden.</p>";
     return;
   }
 
-  const pink = "rgb(196, 0, 67)";     // Pantone 1935c
-  const darkblue = "rgb(7,30,73)";    // Pantone 2768c
+  const pink = "rgb(196,0,67)"; // Pantone 1935c approx
+  const darkblue = "rgb(7,30,73)"; // Pantone 2768c approx
 
-  document.getElementById("content").innerHTML = `
-  
-    <!-- FLEX: links Text, rechts Foto -->
+  // Bild-Block (falls vorhanden)
+  const imageBlock = imageUrl ? `
+    <div class="md:w-72 text-center">
+      <img id="person-image" src="${imageUrl}" alt="${escapeHtml(person.Name)}"
+           class="rounded-xl shadow cursor-zoom-in mx-auto max-h-72 object-contain"
+           style="width:100%;height:auto;object-fit:contain;"
+           onclick="openLightbox('${imageUrl}')">
+      <p class="text-xs text-gray-500 mt-2">
+        Bildquelle: <a href="${imageUrl}" target="_blank" class="underline">Wikimedia Commons</a>
+      </p>
+    </div>` : "";
+
+  document.getElementById("personHeader").innerHTML = `
     <div class="flex flex-col md:flex-row md:justify-between gap-6">
-      
-      <!-- Text links -->
       <div class="flex-1">
-        <h1 class="text-3xl font-bold mb-4" style="color:${pink}">
-          ${person.Name}
-        </h1>
+        <h1 class="text-3xl font-bold mb-4" style="color:${pink}">${escapeHtml(person.Name)}</h1>
 
-        <p class="text-lg" style="color:${darkblue}">
-          <strong>Geburtstag:</strong> ${person.Geburtstag}
-        </p>
-        <p class="text-lg" style="color:${darkblue}">
-          <strong>Geburtsort:</strong> ${person.Geburtsort}
-        </p>
+        <p class="text-lg" style="color:${darkblue}"><strong>Geburtstag:</strong> ${escapeHtml(person.Geburtstag || "")}</p>
+        <p class="text-lg" style="color:${darkblue}"><strong>Geburtsort:</strong> ${escapeHtml(person.Geburtsort || "")}</p>
 
-        <p class="mt-3 text-lg" style="color:${darkblue}">
-          <strong>Sterbedatum:</strong> ${person.Sterbedatum}
-        </p>
-        <p class="text-lg" style="color:${darkblue}">
-          <strong>Sterbeort:</strong> ${person.Sterbeort}
-        </p>
+        <p class="mt-3 text-lg" style="color:${darkblue}"><strong>Sterbedatum:</strong> ${escapeHtml(person.Sterbedatum || "")}</p>
+        <p class="text-lg" style="color:${darkblue}"><strong>Sterbeort:</strong> ${escapeHtml(person.Sterbeort || "")}</p>
 
-        <p class="mt-3 text-lg">
-          <strong>GND:</strong> ${gndLink(person.GND)}
-        </p>
+        <p class="mt-3 text-lg"><strong>GND:</strong> ${person.GND ? gndLink(person.GND) : ""}</p>
       </div>
 
-      <!-- Bild rechts -->
-      ${
-        imageUrl
-          ? `
-            <div class="md:w-72 text-center">
-              <img
-                src="${imageUrl}"
-                alt="${person.Name}"
-                class="rounded-xl shadow cursor-zoom-in mx-auto max-h-72 object-contain"
-                onclick="openLightbox('${imageUrl}')">
-
-              <p class="text-xs text-gray-500 mt-2">
-                Bildquelle: <a href="${imageUrl}" target="_blank"
-                class="underline">Wikimedia Commons</a>
-              </p>
-            </div>`
-          : ""
-      }
+      ${imageBlock}
     </div>
 
-    <!-- Biografie -->
-    <p class="mt-6 text-gray-700 text-lg leading-relaxed">
-      ${person.Biografie || ""}
-    </p>
-  `;
-}
-
-function gndLink(id) {
-  return `<a class="underline text-blue-700" 
-            href="https://d-nb.info/gnd/${id}" 
-            target="_blank">${id}</a>`;
-}
-
-
-/* ------------------------------------------------------
-   LIGHTBOX FUNKTION
------------------------------------------------------- */
-function openLightbox(url) {
-  document.getElementById("lightbox-img").src = url;
-  document.getElementById("lightbox").classList.remove("hidden");
-}
-
-document.getElementById("lightbox").addEventListener("click", () => {
-  document.getElementById("lightbox").classList.add("hidden");
-});
-
-  // =========================================
-//   TABS
-// =========================================
-
-function initTabs() {
-  const buttons = document.querySelectorAll(".tabBtn");
-  const tabContent = document.getElementById("tabContent");
-
-  buttons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      buttons.forEach(b => b.classList.remove("border-b-2", "border-blue-500"));
-
-      btn.classList.add("border-b-2", "border-blue-500");
-
-      const tab = btn.dataset.tab;
-
-      if (tab === "bio") renderBio();
-      if (tab === "network") renderNetwork();
-      if (tab === "map") renderMapTab();
-    });
-  });
-
-  // Standard: Biografie-Tab
-  document.querySelector(".tabBtn[data-tab='bio']").click();
-}
-
-
-
-// =========================================
-//   TAB 1 — BIO
-// =========================================
-function renderBio() {
-  document.getElementById("tabContent").innerHTML = `
-    <div class="prose max-w-none">
-      <p class="text-lg text-gray-700 whitespace-pre-line">
-        ${person.Biografie || "Keine Biografie vorhanden."}
-      </p>
-    </div>
-  `;
-}
-
-
-
-// =========================================
-//   TAB 2 — GND NETWORK
-// =========================================
-function renderNetwork() {
-  document.getElementById("tabContent").innerHTML = `
-    <h2 class="text-xl font-semibold mb-4">Netzwerk (GND-Explorer)</h2>
-    <iframe 
-      id="gndNetwork"
-      src="https://explore.gnd.network/gnd/${person.GND}/relations?term=${person.GND}&rows=25&pos=1">
-    </iframe>
-  `;
-}
-
-
-
-// =========================================
-//   TAB 3 — MAP
-// =========================================
-async function geocode(place) {
-  if (!place) return null;
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}`;
-  const r = await fetch(url);
-  const j = await r.json();
-  if (j && j[0]) return [parseFloat(j[0].lat), parseFloat(j[0].lon)];
-  return null;
-}
-
-async function renderMapTab() {
-  document.getElementById("tabContent").innerHTML = `
-    <h2 class="text-xl font-semibold mb-4">Karte</h2>
-    <div id="map" class="w-full h-[70vh] rounded-xl shadow"></div>
-  `;
-
-  if (mapInitialized) return;
-
-  mapInitialized = true;
-
-  const map = L.map("map").setView([54.5, 9.5], 7);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19
-  }).addTo(map);
-
-  const birthIcon = new L.Icon({
-    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
-    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
-  });
-
-  const deathIcon = new L.Icon({
-    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
-  });
-
-  if (person.Geburtsort) {
-    const loc = await geocode(person.Geburtsort);
-    if (loc)
-      L.marker(loc, {icon: birthIcon})
-        .addTo(map)
-        .bindPopup(`<b>${person.Name}</b><br>Geburtsort: ${person.Geburtsort}`);
-  }
-
-  if (person.Sterbeort) {
-    const loc = await geocode(person.Sterbeort);
-    if (loc)
-      L.marker(loc, {icon: deathIcon})
-        .addTo(map)
-        .bindPopup(`<b>${person.Name}</b><br>Sterbeort: ${person.Sterbeort}`);
-  }
-}
-</script> 
-
-
-</body>
-</html>
+    <p class="mt-6 text-gray-700 text-lg leading-relaxed">${escapeHtml(person.Biografi
