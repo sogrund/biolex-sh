@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Personenlexikon Schleswig-Holstein</title>
+  <title>Personenlexikon für Schleswig-Holstein</title>
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -31,7 +31,7 @@
   
 <!-- BANNER OBEN VOLLBREITE -->
 <header class="banner-blue w-full px-6 py-10 shadow-lg">
-  <h1 class="text-4xl font-bold mb-4 text-white">Personenlexikon Schleswig-Holstein</h1>
+  <h1 class="text-4xl font-bold mb-4 text-white">Personenlexikon für Schleswig-Holstein</h1>
 
   <p class="text-white w-full max-w-3xl leading-relaxed mb-6">
     Suchen Sie in über 1800 Einträgen des in 13 Bänden zwischen 1971 und 2011 erschienenen <em>Biographischen Lexikons für Schleswig-Holstein und Lübeck</em>. Sie finden hier Kurzbiografien 
@@ -253,6 +253,7 @@ function applyFilters() {
       <p><strong>Geburtsort:</strong> ${row.Geburtsort}</p>
       <p><strong>Sterbedatum:</strong> ${row.Sterbedatum}</p>
       <p><strong>Sterbeort:</strong> ${row.Sterbeort}</p>
+      <p><strong>Sterbeort:</strong> ${row.Quelle}</p>
       <p><strong>GND:</strong> ${gndLink(row.GND)}</p>
       <p class="mt-2 text-sm text-gray-700">${row.Biografie || ""}</p>
     </div>
