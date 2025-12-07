@@ -28,17 +28,23 @@
 const csvUrl = "data.csv";
 let person = null;
 
-// Get ID from URL
+// ID from URL
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
+
+// ========== FIX: function exists now ==========
+function gndLink(id) {
+  if (!id) return "";
+  return `<a href="https://d-nb.info/gnd/${id}" target="_blank" class="text-blue-600 underline">${id}</a>`;
+}
 
 // Load CSV
 Papa.parse(csvUrl, {
   download: true,
   header: true,
   complete: r => {
-    const all = r.data;
-    person = all.find(p => p.GND === id);
+    const all = r.data.filter(p => p.Name); // filter empty rows
+    person = all.find(p => p.GND === id);   // ensure name of column matches!
     renderPerson();
     renderMap();
   }
@@ -59,7 +65,7 @@ function renderPerson() {
 
     <p class="mt-2"><strong>Sterbedatum:</strong> ${person.Sterbedatum}</p>
     <p><strong>Sterbeort:</strong> ${person.Sterbeort}</p>
-     <p><strong>GND:</strong> ${gndLink(person.GND)}</p>
+    <p><strong>GND:</strong> ${gndLink(person.GND)}</p>
 
     <p class="mt-4 text-gray-700 text-lg">${person.Biografie || ""}</p>
   `;
@@ -84,7 +90,6 @@ async function renderMap() {
     maxZoom: 19
   }).addTo(map);
 
-  // Icons
   const birthIcon = new L.Icon({
     iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
     shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
@@ -95,7 +100,6 @@ async function renderMap() {
     shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
   });
 
-  // Add markers
   if (person.Geburtsort) {
     const loc = await geocode(person.Geburtsort);
     if (loc)
