@@ -164,36 +164,52 @@ document.getElementById("deathYearMax").addEventListener("input", e => { activeF
 document.getElementById("birthYearMin").addEventListener("input", e => { activeFilters.birthMin = e.target.value; applyFilters(); });
 document.getElementById("birthYearMax").addEventListener("input", e => { activeFilters.birthMax = e.target.value; applyFilters(); });
 
-function updateFacetFilters(filtered) {
-  const fillFacet = (id, field, activeSet) => {
-    const div = document.getElementById(id);
-    const counts = {};
-    filtered.forEach(row => {
-      if (row[field]) counts[row[field]] = (counts[row[field]] || 0) + 1;
-    });
+function updateFacetCounts(rows) {
+  const sterbeortDiv = document.getElementById("filterSterbeort");
+  const geburtsortDiv = document.getElementById("filterGeburtsort");
 
-    div.innerHTML = Object.entries(counts)
-      .sort((a,b) => b[1]-a[1])
-      .slice(0, 12)
-      .map(([place,count]) => `
-        <label>
-          <input type="checkbox" value="${place}" ${activeSet.has(place)?"checked":""}>
-          ${place} <span class="text-sm text-gray-500">(${count})</span>
-        </label>
-      `)
-      .join("<br>");
+  const sterbeorte = [...new Set(data.map(d => d.Sterbeort).filter(Boolean))].sort();
+  const geburtsorte = [...new Set(data.map(d => d.Geburtsort).filter(Boolean))].sort();
 
-    div.querySelectorAll("input").forEach(cb => {
-      cb.addEventListener("change", () => {
-        cb.checked ? activeSet.add(cb.value) : activeSet.delete(cb.value);
-        applyFilters();
-      });
-    });
-  };
+  const sterbeortCounts = {};
+  const geburtsortCounts = {};
 
-  fillFacet("filterSterbeort", "Sterbeort", activeFilters.sterbeorte);
-  fillFacet("filterGeburtsort", "Geburtsort", activeFilters.geburtsorte);
+  rows.forEach(r => {
+    if (r.Sterbeort) sterbeortCounts[r.Sterbeort] = (sterbeortCounts[r.Sterbeort] || 0) + 1;
+    if (r.Geburtsort) geburtsortCounts[r.Geburtsort] = (geburtsortCounts[r.Geburtsort] || 0) + 1;
+  });
+
+  sterbeortDiv.innerHTML = buildFacetList(sterbeorte, sterbeortCounts, "sterbe");
+  geburtsortDiv.innerHTML = buildFacetList(geburtsorte, geburtsortCounts, "geburts");
 }
+
+  function buildFacetList(list, counts, type) {
+  const MAX_VISIBLE = 10;
+
+  let html = "";
+
+  list.forEach((o, i) => {
+    const hiddenClass = i >= MAX_VISIBLE ? "hidden more-" + type : "";
+    html += `
+      <label class="flex items-center gap-1 ${hiddenClass}">
+        <input type="checkbox" value="${o}">
+        ${o} <span class="text-gray-500">(${counts[o] || 0})</span>
+      </label>
+    `;
+  });
+
+  if (list.length > MAX_VISIBLE) {
+    html += `
+      <button class="text-blue-600 underline text-sm mt-2"
+              onclick="toggleMore('${type}')">
+        weitere...
+      </button>
+    `;
+  }
+
+  return html;
+}
+
 
 
 /* ---------------------------
