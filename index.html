@@ -95,10 +95,43 @@
     <div id="map" class="w-full h-96 mb-10 rounded-xl shadow"></div>
 
     <!-- View Buttons -->
-    <div class="flex gap-4">
-  <button id="cardViewBtn" class="px-4 py-2 rounded-xl bg-blue-600 text-white">Kartenansicht</button>
+<div class="flex gap-2 mb-4">
+  <button id="cardViewBtn" class="px-4 py-2 rounded-xl border border-gray-400 active-btn">Kartenansicht</button>
   <button id="tableViewBtn" class="px-4 py-2 rounded-xl border border-gray-400">Tabellenansicht</button>
-  </div>
+</div>
+
+<style>
+  /* Aktive Button-Farbe Pink CMYK 10/100/55/0 -> #E60099 */
+  .active-btn {
+    @apply text-white; /* Text weiß */
+    background-color: #E60099;
+  }
+</style>
+
+<script>
+  const cardBtn = document.getElementById('cardViewBtn');
+  const tableBtn = document.getElementById('tableViewBtn');
+
+  function setActive(button) {
+    // Alle Buttons inaktiv machen
+    cardBtn.classList.remove('active-btn', 'bg-blue-600', 'border-gray-400', 'border');
+    tableBtn.classList.remove('active-btn', 'bg-blue-600', 'border-gray-400', 'border');
+
+    // Zustände zurücksetzen
+    cardBtn.classList.add('bg-blue-600');
+    tableBtn.classList.add('border', 'border-gray-400');
+
+    // Aktiven Button setzen
+    button.classList.add('active-btn');
+  }
+
+  // Event Listener
+  cardBtn.addEventListener('click', () => setActive(cardBtn));
+  tableBtn.addEventListener('click', () => setActive(tableBtn));
+
+  // Standardmäßig Kartenansicht aktiv
+  setActive(cardBtn);
+</script>
   
     <!-- Cards -->
     <div id="cardContainer"
