@@ -94,6 +94,12 @@
     <!-- Map -->
     <div id="map" class="w-full h-96 mb-10 rounded-xl shadow"></div>
 
+    <!-- View Buttons -->
+    <div class="flex gap-2">
+  <button id="cardViewBtn" class="px-4 py-2 rounded-xl bg-blue-600 text-white">Kartenansicht</button>
+  <button id="tableViewBtn" class="px-4 py-2 rounded-xl border border-gray-400">Tabellenansicht</button>
+  </div>
+  
     <!-- Cards -->
     <div id="cardContainer"
          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10"></div>
@@ -234,7 +240,22 @@ function applyFilters() {
   renderMap(rows);
 }
 
+// Umschalten der Ansicht
+const cardContainer = document.getElementById("cardContainer");
+const tableContainer = document.getElementById("tableContainer");
 
+
+document.getElementById("cardViewBtn").onclick = () => {
+cardContainer.classList.remove("hidden");
+tableContainer.classList.add("hidden");
+};
+
+
+document.getElementById("tableViewBtn").onclick = () => {
+cardContainer.classList.add("hidden");
+tableContainer.classList.remove("hidden");
+};
+  
 /* ---------------------------
    CARDS
 ---------------------------- */
