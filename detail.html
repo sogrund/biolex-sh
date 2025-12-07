@@ -50,7 +50,6 @@ Papa.parse(csvUrl, {
   }
 });
 
-
 function renderPerson() {
   if (!person) {
     document.getElementById("content").innerHTML = "<p>Person nicht gefunden.</p>";
@@ -68,9 +67,26 @@ function renderPerson() {
     <p><strong>GND:</strong> ${gndLink(person.GND)}</p>
 
     <p class="mt-4 text-gray-700 text-lg">${person.Biografie || ""}</p>
-  `;
-}
 
+    <!-- GND Network -->
+    <div class="mt-6">
+      <h2 class="text-xl font-semibold mb-2">Netzwerk (GND-Explorer)</h2>
+      <iframe 
+        id="gndNetwork"
+        class="w-full h-[500px] rounded-xl shadow"
+        src=""
+      ></iframe>
+    </div>
+  `;
+
+  // GND-Netzwerk-Link setzen
+  if (person.GND) {
+    document.getElementById("gndNetwork").src =
+      `https://explore.gnd.network/gnd/${person.GND}/relations?term=${person.GND}&rows=25&pos=1`;
+  } else {
+    document.getElementById("gndNetwork").style.display = "none";
+  }
+}
 
 async function geocode(place) {
   if (!place) return null;
