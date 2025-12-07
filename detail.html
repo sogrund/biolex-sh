@@ -61,6 +61,8 @@ Papa.parse(csvUrl, {
   }
 });
 
+ 
+  
 /* ------------------------------------------------------
    🔍 WIKIMEDIA-FOTO LADEN
 ------------------------------------------------------ */
@@ -190,10 +192,67 @@ document.getElementById("lightbox").addEventListener("click", () => {
   document.getElementById("lightbox").classList.add("hidden");
 });
 
+  // =========================================
+//   TABS
+// =========================================
 
-/* ------------------------------------------------------
-   KARTE
------------------------------------------------------- */
+function initTabs() {
+  const buttons = document.querySelectorAll(".tabBtn");
+  const tabContent = document.getElementById("tabContent");
+
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      buttons.forEach(b => b.classList.remove("border-b-2", "border-blue-500"));
+
+      btn.classList.add("border-b-2", "border-blue-500");
+
+      const tab = btn.dataset.tab;
+
+      if (tab === "bio") renderBio();
+      if (tab === "network") renderNetwork();
+      if (tab === "map") renderMapTab();
+    });
+  });
+
+  // Standard: Biografie-Tab
+  document.querySelector(".tabBtn[data-tab='bio']").click();
+}
+
+
+
+// =========================================
+//   TAB 1 — BIO
+// =========================================
+function renderBio() {
+  document.getElementById("tabContent").innerHTML = `
+    <div class="prose max-w-none">
+      <p class="text-lg text-gray-700 whitespace-pre-line">
+        ${person.Biografie || "Keine Biografie vorhanden."}
+      </p>
+    </div>
+  `;
+}
+
+
+
+// =========================================
+//   TAB 2 — GND NETWORK
+// =========================================
+function renderNetwork() {
+  document.getElementById("tabContent").innerHTML = `
+    <h2 class="text-xl font-semibold mb-4">Netzwerk (GND-Explorer)</h2>
+    <iframe 
+      id="gndNetwork"
+      src="https://explore.gnd.network/gnd/${person.GND}/relations?term=${person.GND}&rows=25&pos=1">
+    </iframe>
+  `;
+}
+
+
+
+// =========================================
+//   TAB 3 — MAP
+// =========================================
 async function geocode(place) {
   if (!place) return null;
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}`;
@@ -203,8 +262,15 @@ async function geocode(place) {
   return null;
 }
 
-async function renderMap() {
-  if (!person) return;
+async function renderMapTab() {
+  document.getElementById("tabContent").innerHTML = `
+    <h2 class="text-xl font-semibold mb-4">Karte</h2>
+    <div id="map" class="w-full h-[70vh] rounded-xl shadow"></div>
+  `;
+
+  if (mapInitialized) return;
+
+  mapInitialized = true;
 
   const map = L.map("map").setView([54.5, 9.5], 7);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -237,7 +303,8 @@ async function renderMap() {
         .bindPopup(`<b>${person.Name}</b><br>Sterbeort: ${person.Sterbeort}`);
   }
 }
-</script>
+</script> 
+
 
 </body>
 </html>
