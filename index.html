@@ -298,7 +298,7 @@ tableContainer.classList.remove("hidden");
 }
   function renderCards(rows) {
   document.getElementById("cardContainer").innerHTML = rows.map(row => `
-    <div class="bg-white p-4 shadow rounded-xl text-blue-800">
+    <div class="bg-white p-4 shadow rounded-xl">
       <a href="detail.html?id=${row.GND}" class="text-rose-600 text-xl underline">
         ${row.Name}
       </a>
