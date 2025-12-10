@@ -121,7 +121,38 @@
       </button>
     </div>
 
-    <style> /* Aktive Button-Farbe Pink CMYK 10/100/55/0 -> #E60099 */ .active-btn { @apply text-white; /* Text weiß */ background-color: #e11d48; } </style>
+    <style> /* Aktive Button-Farbe Pink CMYK 10/100/55/0 -> #E60099 */
+      .active-btn { 
+        @apply text-white; /* Text weiß */ 
+        background-color: #e11d48; 
+     } 
+    </style>  
+    
+     <script>
+const cardBtn = document.getElementById('cardViewBtn');
+const tableBtn = document.getElementById('tableViewBtn');
+       
+function setActive(button) {
+// Alle Buttons inaktiv machen
+cardBtn.classList.remove('active-btn', 'border-gray-400', 'border');
+tableBtn.classList.remove('active-btn', 'border-gray-400', 'border');
+
+// Zustände zurücksetzen
+cardBtn.classList.add('border', 'border-gray-400');
+tableBtn.classList.add('border', 'border-gray-400');
+
+// Aktiven Button setzen
+button.classList.add('active-btn');
+}
+
+// Event Listener
+cardBtn.addEventListener('click', () => setActive(cardBtn));
+tableBtn.addEventListener('click', () => setActive(tableBtn));
+
+// Standardmäßig Kartenansicht aktiv
+setActive(cardBtn);
+</script>                                                                              
+                                                                                
     
     <!-- Cards -->
     <div id="cardContainer"
@@ -278,20 +309,6 @@ function applyFilters() {
   renderTable(rows);
   renderMap(rows);
 }
-
-
-/* ---------------- View switch ---------------- */
-const cards = document.getElementById("cardContainer");
-const table = document.getElementById("tableContainer");
-
-document.getElementById("cardViewBtn").onclick = () => {
-  cards.classList.remove("hidden");
-  table.classList.add("hidden");
-};
-document.getElementById("tableViewBtn").onclick = () => {
-  cards.classList.add("hidden");
-  table.classList.remove("hidden");
-};
 
 
 /* ---------------- GND link helper ---------------- */
