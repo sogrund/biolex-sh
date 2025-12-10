@@ -344,6 +344,33 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 setTimeout(() => map.invalidateSize(), 300);
 
+ // -------------------------------------
+// MAP LEGEND
+// -------------------------------------
+
+const legend = L.control({ position: "bottomright" });
+
+legend.onAdd = function () {
+
+const div = L.DomUtil.create("div", "bg-white p-3 rounded shadow text-sm");
+
+div.innerHTML = `
+<div class="flex items-center gap-2 mb-1">
+<span class="inline-block w-3 h-3 bg-blue-600 rounded-full"></span>
+Geburtsort
+</div>
+<div class="flex items-center gap-2">
+<span class="inline-block w-3 h-3 bg-rose-600 rounded-full"></span>
+Sterbeort
+</div>
+`;
+
+return div;
+};
+
+legend.addTo(map);
+
+  
 const birthCluster = L.markerClusterGroup();
 const deathCluster = L.markerClusterGroup();
 map.addLayer(birthCluster);
