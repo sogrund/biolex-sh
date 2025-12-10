@@ -18,52 +18,67 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 
-    <style>
-  @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
-  body { font-family: 'Prompt', sans-serif; }
-  .text-pink { color: rgb(212,0,75); }
-    .banner-blue {
-      background-color: #071E49; /* RGB 7,30,73  → entspricht Pantone 289c */
-    }
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
+    body { font-family: 'Prompt', sans-serif; }
+    .banner-blue { background-color: #071E49; }
   </style>
 </head>
-  
-<!-- BANNER OBEN VOLLBREITE -->
-<header class="banner-blue w-full px-6 py-10 shadow-lg">
+
+<body class="bg-gray-100">
+
+<!-- BANNER -->
+<header class="banner-blue w-full px-6 py-10 shadow-lg relative">
+
+  <!-- Hamburger Button (nur mobil) -->
+  <button id="menuBtn"
+          class="md:hidden absolute left-6 top-6 w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow">
+      <div class="space-y-1">
+        <div class="w-6 h-0.5 bg-black"></div>
+        <div class="w-6 h-0.5 bg-black"></div>
+        <div class="w-6 h-0.5 bg-black"></div>
+      </div>
+  </button>
+
   <h1 class="text-4xl mb-4 text-white">Personenlexikon für Schleswig-Holstein</h1>
 
-  <p class="text-white w-full leading-relaxed mb-6">
-    Suchen Sie in über 1800 Einträgen des in 13 Bänden zwischen 1971 und 2011 erschienenen <em>Biographischen Lexikons für Schleswig-Holstein und Lübeck</em>. Sie finden hier Kurzbiografien 
-    zu bedeutenden Personen und Familien Schleswig-Holsteins, darunter Künstler, Wissenschaftler, Politiker, Geistliche, Unternehmer und viele weitere, die in Schleswig-Holstein geboren wurden
-    oder maßgeblich gewirkt haben.
+  <p class="text-white leading-relaxed mb-6 max-w-4xl">
+    Suchen Sie in über 1800 Einträgen des in 13 Bänden zwischen 1971 und 2011 erschienenen
+    <em>Biographischen Lexikons für Schleswig-Holstein und Lübeck</em> …
   </p>
 
-  <!-- Search field INSIDE banner -->
-  <input id="searchInput" type="text" placeholder="Suche nach Name, Ort …"
-        class="w-full md:w-1/2 px-4 py-3 rounded-xl border border-gray-300" />
+  <input id="searchInput" type="text"
+         placeholder="Suche nach Name, Ort …"
+         class="w-full md:w-1/2 px-4 py-3 rounded-xl border border-gray-300" />
 </header>
-  
-<!-- Layout nach dem Banner -->  
-  <body class="bg-gray-100">
-    
-<div class="max-w-7xl mx-auto flex gap-6 items-start">
-  <!-- Sidebar -->
-  <aside class="w-72 flex-none bg-white shadow h-screen p-4 overflow-y-auto sticky self-start top-0">
+
+<!-- MOBILE OVERLAY -->
+<div id="overlay" class="fixed inset-0 bg-black bg-opacity-40 hidden z-30"></div>
+
+<!-- PAGE WRAPPER -->
+<div class="max-w-7xl mx-auto flex gap-6 items-start px-4">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar"
+         class="w-72 bg-white shadow h-screen p-4 overflow-y-auto
+                fixed md:static top-0 left-0 z-40 transform -translate-x-full md:translate-x-0
+                transition-transform duration-300">
+
     <h2 class="text-xl font-semibold mb-4">🔍 Filter</h2>
 
-   <!-- Geburtsort -->
+    <!-- Geburtsort -->
     <details class="mb-4">
       <summary class="cursor-pointer font-medium">Geburtsort</summary>
       <div id="filterGeburtsort" class="mt-2 space-y-1"></div>
-    </details>   
-    
+    </details>
+
     <!-- Sterbeort -->
     <details class="mb-4">
       <summary class="cursor-pointer font-medium">Sterbeort</summary>
       <div id="filterSterbeort" class="mt-2 space-y-1"></div>
     </details>
 
-   <!-- Geburtsdatum -->
+    <!-- Geburtsdatum -->
     <details class="mb-4">
       <summary class="cursor-pointer font-medium">Geburtsdatum (Jahre)</summary>
       <div class="mt-2">
@@ -72,7 +87,7 @@
         <label>bis</label>
         <input id="birthYearMax" type="number" class="w-full border rounded p-1">
       </div>
-    </details>  
+    </details>
 
     <!-- Sterbedatum -->
     <details class="mb-4">
@@ -87,67 +102,39 @@
 
   </aside>
 
-  <!-- Main Content -->
-  <main class="flex-1 p-6">
+  <!-- MAIN -->
+  <main class="flex-1 p-4 md:p-6">
 
-    <!-- Map -->
-    <div id="map" class="w-full aspect-video my-10 rounded-xl shadow"></div>
+    <div id="map" class="w-full aspect-video rounded-xl shadow my-6"></div>
 
-    <!-- View Buttons -->
-<div class="flex gap-2 mb-4 justify-end">
-  <button id="cardViewBtn" class="px-4 py-2 rounded-xl border border-gray-400 active-btn">Kartenansicht</button>
-  <button id="tableViewBtn" class="px-4 py-2 rounded-xl border border-gray-400">Tabellenansicht</button>
-</div>
+    <!-- View Switch -->
+    <div class="flex gap-2 mb-4 justify-end">
+      <button id="cardViewBtn"
+              class="px-4 py-2 rounded-xl border border-gray-400 active-btn">
+        Kartenansicht
+      </button>
+      <button id="tableViewBtn"
+              class="px-4 py-2 rounded-xl border border-gray-400">
+        Tabellenansicht
+      </button>
+    </div>
 
-<style>
-  /* Aktive Button-Farbe Pink CMYK 10/100/55/0 -> #E60099 */
-  .active-btn {
-    @apply text-white; /* Text weiß */
-    background-color: #e11d48;
-  }
-</style>
-
-<script>
-  const cardBtn = document.getElementById('cardViewBtn');
-  const tableBtn = document.getElementById('tableViewBtn');
-
-  function setActive(button) {
-    // Alle Buttons inaktiv machen
-    cardBtn.classList.remove('active-btn', 'border-gray-400', 'border');
-    tableBtn.classList.remove('active-btn', 'border-gray-400', 'border');
-
-    // Zustände zurücksetzen
-    cardBtn.classList.add('border', 'border-gray-400');
-    tableBtn.classList.add('border', 'border-gray-400');
-
-    // Aktiven Button setzen
-    button.classList.add('active-btn');
-  }
-
-  // Event Listener
-  cardBtn.addEventListener('click', () => setActive(cardBtn));
-  tableBtn.addEventListener('click', () => setActive(tableBtn));
-
-  // Standardmäßig Kartenansicht aktiv
-  setActive(cardBtn);
-</script>
-  
     <!-- Cards -->
     <div id="cardContainer"
          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10"></div>
 
     <!-- Table -->
-    <div class="overflow-x-auto">
+    <div id="tableContainer" class="overflow-x-auto hidden">
       <table class="min-w-full bg-white shadow rounded-xl overflow-hidden">
         <thead class="bg-gray-200">
         <tr>
           <th class="px-4 py-2 text-left">Name</th>
-          <th class="px-4 py-2 text-left">Geburtsdatum</th>
-          <th class="px-4 py-2 text-left">Geburtsort</th>
-          <th class="px-4 py-2 text-left">Sterbedatum</th>
-          <th class="px-4 py-2 text-left">Sterbeort</th>
-           <th class="px-4 py-2 text-left">Quelle</th>
-          <th class="px-4 py-2 text-left">GND</th>
+          <th class="px-4 py-2">Geburtsdatum</th>
+          <th class="px-4 py-2">Geburtsort</th>
+          <th class="px-4 py-2">Sterbedatum</th>
+          <th class="px-4 py-2">Sterbeort</th>
+          <th class="px-4 py-2">Quelle</th>
+          <th class="px-4 py-2">GND</th>
         </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -157,32 +144,47 @@
   </main>
 </div>
 
-
-<!-- Leaflet JS -->
+<!-- LEAFLET JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
-
 <script>
-/* ---------------------------
-   CSV LADEN
----------------------------- */
+/* ---------------- Sidebar mobile toggle ---------------- */
+
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("overlay");
+const menuBtn = document.getElementById("menuBtn");
+
+menuBtn.onclick = () => {
+  sidebar.classList.remove("-translate-x-full");
+  overlay.classList.remove("hidden");
+
+  // Fix: Map neu berechnen nach Animation
+  setTimeout(() => map.invalidateSize(), 350);
+};
+
+overlay.onclick = () => {
+  sidebar.classList.add("-translate-x-full");
+  overlay.classList.add("hidden");
+
+  setTimeout(() => map.invalidateSize(), 350);
+};
+
+
+/* ---------------- CSV laden ---------------- */
 const csvUrl = "data.csv";
 let data = [];
 
 Papa.parse(csvUrl, {
   download: true,
   header: true,
-  complete: function(results) {
-    data = results.data;
+  complete: r => {
+    data = r.data;
     applyFilters();
   }
 });
 
-
-/* ---------------------------
-   FILTERS + FACETTEN
----------------------------- */
+/* ---------------- Filter State ---------------- */
 let activeFilters = {
   sterbeorte: new Set(),
   geburtsorte: new Set(),
@@ -193,35 +195,41 @@ let activeFilters = {
   birthMax: null
 };
 
+/* Search */
 document.getElementById("searchInput").addEventListener("input", e => {
   activeFilters.search = e.target.value.toLowerCase();
   applyFilters();
 });
 
-document.getElementById("deathYearMin").addEventListener("input", e => { activeFilters.deathMin = e.target.value; applyFilters(); });
-document.getElementById("deathYearMax").addEventListener("input", e => { activeFilters.deathMax = e.target.value; applyFilters(); });
-document.getElementById("birthYearMin").addEventListener("input", e => { activeFilters.birthMin = e.target.value; applyFilters(); });
-document.getElementById("birthYearMax").addEventListener("input", e => { activeFilters.birthMax = e.target.value; applyFilters(); });
+/* Input fields */
+["deathYearMin","deathYearMax","birthYearMin","birthYearMax"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", e=>{
+    activeFilters[id.replace("Year","")] = e.target.value;
+    applyFilters();
+  });
+});
 
 
+/* ---------------- Facetten aktualisieren ---------------- */
 function updateFacetFilters(filtered) {
-  const fillFacet = (id, field, activeSet) => {
+
+  function fillFacet(id, field, activeSet) {
     const div = document.getElementById(id);
     const counts = {};
-    filtered.forEach(row => {
-      if (row[field]) counts[row[field]] = (counts[row[field]] || 0) + 1;
+
+    filtered.forEach(r => {
+      if (r[field]) counts[r[field]] = (counts[r[field]] || 0) + 1;
     });
 
     div.innerHTML = Object.entries(counts)
-      .sort((a,b) => b[1]-a[1])
+      .sort((a,b)=>b[1]-a[1])
       .slice(0, 12)
       .map(([place,count]) => `
         <label>
           <input type="checkbox" value="${place}" ${activeSet.has(place)?"checked":""}>
           ${place} <span class="text-sm text-gray-500">(${count})</span>
         </label>
-      `)
-      .join("<br>");
+      `).join("<br>");
 
     div.querySelectorAll("input").forEach(cb => {
       cb.addEventListener("change", () => {
@@ -229,39 +237,34 @@ function updateFacetFilters(filtered) {
         applyFilters();
       });
     });
-  };
+  }
 
   fillFacet("filterSterbeort", "Sterbeort", activeFilters.sterbeorte);
   fillFacet("filterGeburtsort", "Geburtsort", activeFilters.geburtsorte);
 }
 
-/* ---------------------------
-   FILTER LOGIK
----------------------------- */
-function applyFilters() {
-  let rows = data.filter(row => {
 
-    // Search
+/* ---------------- Filter Logik ---------------- */
+function applyFilters() {
+  let rows = data.filter(r => {
+    // Textsuche
     if (activeFilters.search) {
       const s = activeFilters.search;
-      if (!Object.values(row).some(v => String(v).toLowerCase().includes(s))) return false;
+      if (!Object.values(r).some(v => String(v).toLowerCase().includes(s))) return false;
     }
 
     // Facetten
-    if (activeFilters.sterbeorte.size &&
-        !activeFilters.sterbeorte.has(row.Sterbeort)) return false;
+    if (activeFilters.sterbeorte.size && !activeFilters.sterbeorte.has(r.Sterbeort)) return false;
+    if (activeFilters.geburtsorte.size && !activeFilters.geburtsorte.has(r.Geburtsort)) return false;
 
-    if (activeFilters.geburtsorte.size &&
-        !activeFilters.geburtsorte.has(row.Geburtsort)) return false;
+    // Jahre
+    const d = r.Sterbedatum ? parseInt(r.Sterbedatum.substring(0,4)) : null;
+    const b = r.Geburtsdatum ? parseInt(r.Geburtsdatum.substring(0,4)) : null;
 
-    // Year filters
-    const dYear = row.Sterbedatum ? parseInt(row.Sterbedatum.substring(0,4)) : null;
-    const bYear = row.Geburtstag ? parseInt(row.Geburtstag.substring(0,4)) : null;
-
-    if (activeFilters.deathMin && dYear < activeFilters.deathMin) return false;
-    if (activeFilters.deathMax && dYear > activeFilters.deathMax) return false;
-    if (activeFilters.birthMin && bYear < activeFilters.birthMin) return false;
-    if (activeFilters.birthMax && bYear > activeFilters.birthMax) return false;
+    if (activeFilters.deathMin && d < activeFilters.deathMin) return false;
+    if (activeFilters.deathMax && d > activeFilters.deathMax) return false;
+    if (activeFilters.birthMin && b < activeFilters.birthMin) return false;
+    if (activeFilters.birthMax && b > activeFilters.birthMax) return false;
 
     return true;
   });
@@ -272,63 +275,52 @@ function applyFilters() {
   renderMap(rows);
 }
 
-// Umschalten der Ansicht
-const cardContainer = document.getElementById("cardContainer");
-const tableContainer = document.getElementById("tableContainer");
 
+/* ---------------- View switch ---------------- */
+const cards = document.getElementById("cardContainer");
+const table = document.getElementById("tableContainer");
 
 document.getElementById("cardViewBtn").onclick = () => {
-cardContainer.classList.remove("hidden");
-tableContainer.classList.add("hidden");
+  cards.classList.remove("hidden");
+  table.classList.add("hidden");
 };
-
-
 document.getElementById("tableViewBtn").onclick = () => {
-cardContainer.classList.add("hidden");
-tableContainer.classList.remove("hidden");
+  cards.classList.add("hidden");
+  table.classList.remove("hidden");
 };
-  
-/* ---------------------------
-   CARDS
----------------------------- */
-  function gndLink(gnd) {
-  if (!gnd || gnd.trim() === "") return "";
-  const url = `https://explore.gnd.network/${encodeURIComponent(gnd)}`;
-  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;  
+
+
+/* ---------------- GND link helper ---------------- */
+function gndLink(gnd) {
+  if (!gnd) return "";
+  const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25`;
+  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;
 }
-  function renderCards(rows) {
-  document.getElementById("cardContainer").innerHTML = rows.map(row => `
+
+
+/* ---------------- Cards ---------------- */
+function renderCards(rows) {
+  cards.innerHTML = rows.map(r => `
     <div class="bg-white p-4 shadow rounded-xl">
-      <a href="detail.html?id=${row.GND}" class="text-rose-600 text-xl underline">
-        ${row.Name}
-      </a>
-      <p><strong>Geburtsdatum:</strong> ${row.Geburtsdatum}</p>
-      <p><strong>Geburtsort:</strong> ${row.Geburtsort}</p>
-      <p><strong>Sterbedatum:</strong> ${row.Sterbedatum}</p>
-      <p><strong>Sterbeort:</strong> ${row.Sterbeort}</p>
-      <p><strong>Quelle Biolex:</strong> ${row.Quelle}</p>
-      <p><strong>GND:</strong> ${gndLink(row.GND)}</p>
-      <p class="mt-2 text-sm text-gray-700">${row.Biografie || ""}</p>
+      <a href="detail.html?id=${r.GND}" class="text-rose-600 text-xl underline">${r.Name}</a>
+      <p><strong>Geburtsdatum:</strong> ${r.Geburtsdatum}</p>
+      <p><strong>Geburtsort:</strong> ${r.Geburtsort}</p>
+      <p><strong>Sterbedatum:</strong> ${r.Sterbedatum}</p>
+      <p><strong>Sterbeort:</strong> ${r.Sterbeort}</p>
+      <p><strong>Quelle:</strong> ${r.Quelle}</p>
+      <p><strong>GND:</strong> ${gndLink(r.GND)}</p>
+      <p class="mt-2 text-sm text-gray-700">${r.Biografie || ""}</p>
     </div>
   `).join("");
 }
 
 
-/* ---------------------------
-   TABLE
----------------------------- */
-  function gndLink(gnd) {
-  if (!gnd || gnd.trim() === "") return "";
-  const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25`;
-  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;
-}
-  function renderTable(rows) {
+/* ---------------- Table ---------------- */
+function renderTable(rows) {
   document.getElementById("tableBody").innerHTML = rows.map(r => `
     <tr class="border-b">
       <td class="px-4 py-2">
-        <a href="detail.html?id=${r.GND}" class="text-rose-600 underline">
-          ${r.Name}
-        </a>
+        <a href="detail.html?id=${r.GND}" class="text-rose-600 underline">${r.Name}</a>
       </td>
       <td class="px-4 py-2">${r.Geburtsdatum}</td>
       <td class="px-4 py-2">${r.Geburtsort}</td>
@@ -341,43 +333,14 @@ tableContainer.classList.remove("hidden");
 }
 
 
-/* ---------------------------
-   MAP
----------------------------- */
+/* ---------------- Map ---------------- */
 const map = L.map("map").setView([54.5, 9.5], 7);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  attribution: "© OpenStreetMap"
+  maxZoom: 19
 }).addTo(map);
 
-  // Fix: Karte korrekt neu berechnen, falls Containergröße dynamisch ist
 setTimeout(() => map.invalidateSize(), 300);
-
-  // -------------------------------------
-// MAP LEGEND
-// -------------------------------------
-const legend = L.control({ position: "bottomright" });
-
-legend.onAdd = function () {
-  const div = L.DomUtil.create("div", "bg-white p-3 rounded shadow text-sm");
-
-  div.innerHTML = `
-    <div class="flex items-center gap-2 mb-1">
-      <span class="inline-block w-3 h-3 bg-blue-600 rounded-full"></span>
-      Geburtsort
-    </div>
-    <div class="flex items-center gap-2">
-      <span class="inline-block w-3 h-3 bg-rose-600 rounded-full"></span>
-      Sterbeort
-    </div>
-  `;
-
-  return div;
-};
-
-legend.addTo(map);
-
 
 const birthCluster = L.markerClusterGroup();
 const deathCluster = L.markerClusterGroup();
@@ -388,12 +351,12 @@ const birthIcon = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
 });
-
 const deathIcon = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
 });
 
+/* Geocoder */
 async function geocode(place) {
   if (!place) return null;
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}`;
@@ -403,6 +366,7 @@ async function geocode(place) {
   return null;
 }
 
+/* Render map markers */
 async function renderMap(rows) {
   birthCluster.clearLayers();
   deathCluster.clearLayers();
@@ -423,8 +387,9 @@ async function renderMap(rows) {
         );
     }
   }
-}
 
+  setTimeout(() => map.invalidateSize(), 200);
+}
 </script>
 
 </body>
