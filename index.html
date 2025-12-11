@@ -174,7 +174,7 @@ overlay.onclick = () => {
 };
 
 /* ---------------- CSV laden ---------------- */
-const csvUrl = "data_with_images.csv";
+const csvUrl = "data.csv";
 let data = [];
 
 Papa.parse(csvUrl, {
@@ -271,50 +271,31 @@ function gndLink(gnd) {
   const url = `https://explore.gnd.network/search?term=${encodeURIComponent(gnd)}&rows=25`;
   return `<a href="${url}" target="_blank" class="text-blue-600 underline">${gnd}</a>`;
 }
-
+  
 /* ---------------- Cards ---------------- */
 function renderCards(rows) {
   const cards = document.getElementById("cardContainer");
 
-  cards.innerHTML = rows.map(r => {
+  cards.innerHTML = rows.map(r => `
+    <div class="bg-white p-4 shadow rounded-xl">
+    
+<a href="detail.html?id=${r.GND}" class="text-rose-600 text-xl underline">
+          ${r.Name}
+        </a>
+        <p><strong>Geburtsdatum:</strong> ${r.Geburtsdatum}</p>
+        <p><strong>Geburtsort:</strong> ${r.Geburtsort}</p>
+        <p><strong>Sterbedatum:</strong> ${r.Sterbedatum}</p>
+        <p><strong>Sterbeort:</strong> ${r.Sterbeort}</p>
+        <p><strong>Quelle:</strong> ${r.Quelle}</p>
+        <p><strong>GND:</strong> ${gndLink(r.GND)}</p>
 
-    const thumb = r.BildURL
-      ? `<img src="${r.BildURL}" 
-              alt="${r.Name}" 
-              class="w-full h-48 object-cover rounded-t-xl" />`
-      : `<div class="w-full h-48 bg-gray-200 flex items-center justify-center rounded-t-xl text-gray-500 italic">
-           Kein Bild
-         </div>`;
-
-    return `
-      <div class="bg-white shadow rounded-xl overflow-hidden">
-        
-        ${thumb}
-
-        <div class="p-4">
-          <a href="detail.html?id=${r.GND}" 
-             class="text-rose-600 text-xl underline block mb-2">
-             ${r.Name}
-          </a>
-
-          <p><strong>Geburtsdatum:</strong> ${r.Geburtsdatum || "-"}</p>
-          <p><strong>Geburtsort:</strong> ${r.Geburtsort || "-"}</p>
-          <p><strong>Sterbedatum:</strong> ${r.Sterbedatum || "-"}</p>
-          <p><strong>Sterbeort:</strong> ${r.Sterbeort || "-"}</p>
-          <p><strong>Quelle:</strong> ${r.Quelle || "-"}</p>
-          <p><strong>GND:</strong> ${gndLink(r.GND)}</p>
-
-          <p class="mt-2 text-sm text-gray-700">
-            ${r.Biografie || ""}
-          </p>
-        </div>
-
+        <p class="mt-2 text-sm text-gray-700">${r.Biografie || ""}</p>
       </div>
-    `;
-  }).join("");
+
+    </div>
+  `).join("");
 }
-
-
+    
 /* ---------------- Table ---------------- */
 function renderTable(rows) {
   document.getElementById("tableBody").innerHTML = rows.map(r => `
