@@ -8,16 +8,9 @@
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-Papa.parse(csvUrl, {
-  download: true,
-  header: true,
-  skipEmptyLines: true,   // <<< HINZUGEFÜGT!
-  complete: r => {
-    data = r.data.filter(row => row.Name); // <<< Leere Objekte raus
-    applyFilters();
-  }
-});
-
+  <!-- PapaParse -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
@@ -187,8 +180,9 @@ let data = [];
 Papa.parse(csvUrl, {
   download: true,
   header: true,
+  skipEmptyLines: true,   // <<< WICHTIG: Leerzeilen entfernen!
   complete: r => {
-    data = r.data;
+    data = r.data.filter(row => row.Name && row.Name.trim() !== "");
     applyFilters();
   }
 });
