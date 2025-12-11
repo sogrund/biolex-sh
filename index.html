@@ -272,29 +272,47 @@ function gndLink(gnd) {
 }
 
 /* ---------------- Cards ---------------- */
-  function renderCards(rows) {
+function renderCards(rows) {
   const cards = document.getElementById("cardContainer");
-  cards.innerHTML = rows.map(r => `
-   <div class="bg-white p-4 shadow rounded-xl flex gap-4">
-      
-      <!-- Thumbnail (nur wenn BildURL vorhanden ist) -->
-      ${r.BildURL ? `
-        <img src="${r.BildURL}" 
-             alt="Foto von ${r.Name}"
-             class="w-24 h-24 object-cover rounded-md shadow-sm" />
-      ` : ""}
-         <div class="flex-1">
-      <a href="detail.html?id=${r.GND}" class="text-rose-600 text-xl underline">${r.Name}</a>
-      <p><strong>Geburtsdatum:</strong> ${r.Geburtsdatum}</p>
-      <p><strong>Geburtsort:</strong> ${r.Geburtsort}</p>
-      <p><strong>Sterbedatum:</strong> ${r.Sterbedatum}</p>
-      <p><strong>Sterbeort:</strong> ${r.Sterbeort}</p>
-      <p><strong>Quelle:</strong> ${r.Quelle}</p>
-      <p><strong>GND:</strong> ${gndLink(r.GND)}</p>
-      <p class="mt-2 text-sm text-gray-700">${r.Biografie || ""}</p>
-    </div>
-  `).join("");
+
+  cards.innerHTML = rows.map(r => {
+
+    const thumb = r.BildURL
+      ? `<img src="${r.BildURL}" 
+              alt="${r.Name}" 
+              class="w-full h-48 object-cover rounded-t-xl" />`
+      : `<div class="w-full h-48 bg-gray-200 flex items-center justify-center rounded-t-xl text-gray-500 italic">
+           Kein Bild
+         </div>`;
+
+    return `
+      <div class="bg-white shadow rounded-xl overflow-hidden">
+        
+        ${thumb}
+
+        <div class="p-4">
+          <a href="detail.html?id=${r.GND}" 
+             class="text-rose-600 text-xl underline block mb-2">
+             ${r.Name}
+          </a>
+
+          <p><strong>Geburtsdatum:</strong> ${r.Geburtsdatum || "-"}</p>
+          <p><strong>Geburtsort:</strong> ${r.Geburtsort || "-"}</p>
+          <p><strong>Sterbedatum:</strong> ${r.Sterbedatum || "-"}</p>
+          <p><strong>Sterbeort:</strong> ${r.Sterbeort || "-"}</p>
+          <p><strong>Quelle:</strong> ${r.Quelle || "-"}</p>
+          <p><strong>GND:</strong> ${gndLink(r.GND)}</p>
+
+          <p class="mt-2 text-sm text-gray-700">
+            ${r.Biografie || ""}
+          </p>
+        </div>
+
+      </div>
+    `;
+  }).join("");
 }
+
 
 /* ---------------- Table ---------------- */
 function renderTable(rows) {
