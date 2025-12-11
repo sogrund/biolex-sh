@@ -272,10 +272,18 @@ function gndLink(gnd) {
 }
 
 /* ---------------- Cards ---------------- */
-function renderCards(rows) {
+  function renderCards(rows) {
   const cards = document.getElementById("cardContainer");
   cards.innerHTML = rows.map(r => `
-    <div class="bg-white p-4 shadow rounded-xl">
+   <div class="bg-white p-4 shadow rounded-xl flex gap-4">
+      
+      <!-- Thumbnail (nur wenn BildURL vorhanden ist) -->
+      ${r.BildURL ? `
+        <img src="${r.BildURL}" 
+             alt="Foto von ${r.Name}"
+             class="w-24 h-24 object-cover rounded-md shadow-sm" />
+      ` : ""}
+         <div class="flex-1">
       <a href="detail.html?id=${r.GND}" class="text-rose-600 text-xl underline">${r.Name}</a>
       <p><strong>Geburtsdatum:</strong> ${r.Geburtsdatum}</p>
       <p><strong>Geburtsort:</strong> ${r.Geburtsort}</p>
