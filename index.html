@@ -22,7 +22,23 @@
     @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
     body { font-family: 'Prompt', sans-serif; }
     .banner-blue { background-color: #071E49; }
+    
+.marker-blue, .marker-red {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.marker-blue {
+    background: #071E49; /* Geburtsort */
+}
+
+.marker-red {
+    background: #d9534f; /* Sterbeort */
+}
   </style>
+  
 </head>
 
 <body class="bg-gray-100">
@@ -339,14 +355,14 @@ const deathCluster = L.markerClusterGroup();
 map.addLayer(birthCluster);
 map.addLayer(deathCluster);
 
-const birthIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
+const birthIcon = L.divIcon({
+  className: "marker-blue"
 });
-const deathIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
+
+const deathIcon = L.divIcon({
+  className: "marker-red"
 });
+
 
 async function geocode(place) {
   if (!place) return null;
