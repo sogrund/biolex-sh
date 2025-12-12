@@ -250,29 +250,62 @@ document.getElementById("searchInput").addEventListener("input", e => {
   });
 });
 
-/* ---------------- Facetten aktualisieren ---------------- */
+/* ---------------- Facetten aktualisieren (mit Mehr/Weniger) ---------------- */
 function updateFacetFilters(filtered) {
+
   function fillFacet(id, field, activeSet) {
     const div = document.getElementById(id);
+
     const counts = {};
     filtered.forEach(r => {
       if (r[field]) counts[r[field]] = (counts[r[field]] || 0) + 1;
     });
-    div.innerHTML = Object.entries(counts)
-      .sort((a,b)=>b[1]-a[1])
-      .slice(0, 12)
-      .map(([place,count]) => `
-        <label>
-          <input type="checkbox" value="${place}" ${activeSet.has(place)?"checked":""}>
+
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+    const MAX_VISIBLE = 10;
+    let expanded = div.dataset.expanded === "true";
+
+    // Sichtbare Anzahl
+    const visibleEntries = expanded ? entries : entries.slice(0, MAX_VISIBLE);
+
+    // HTML der Orte
+    let html = visibleEntries
+      .map(([place, count]) => `
+        <label class="block">
+          <input type="checkbox" value="${place}" ${activeSet.has(place) ? "checked" : ""}>
           ${place} <span class="text-sm text-gray-500">(${count})</span>
         </label>
-      `).join("<br>");
-    div.querySelectorAll("input").forEach(cb => {
+      `)
+      .join("");
+
+    // Button "Mehr/Weniger"
+    if (entries.length > MAX_VISIBLE) {
+      html += `
+        <button class="text-blue-600 text-sm mt-2 underline" id="${id}-toggle">
+          ${expanded ? "Weniger anzeigen" : "Mehr anzeigen"}
+        </button>
+      `;
+    }
+
+    div.innerHTML = html;
+
+    // Checkbox-Eventlistener
+    div.querySelectorAll("input[type='checkbox']").forEach(cb => {
       cb.addEventListener("change", () => {
         cb.checked ? activeSet.add(cb.value) : activeSet.delete(cb.value);
         applyFilters();
       });
     });
+
+    // Mehr/Weniger Umschalter
+    const toggleBtn = div.querySelector(`#${id}-toggle`);
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", () => {
+        div.dataset.expanded = expanded ? "false" : "true";
+        fillFacet(id, field, activeSet); // neu rendern
+      });
+    }
   }
 
   fillFacet("filterSterbeort", "Sterbeort", activeFilters.sterbeorte);
