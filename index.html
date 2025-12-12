@@ -44,28 +44,50 @@
 <body class="bg-gray-100">
 
 <!-- BANNER -->
-<header class="banner-blue w-full px-6 py-10 shadow-lg relative">
-  <button id="menuBtn"
-          class="md:hidden absolute left-6 top-6 w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow">
-      <div class="space-y-1">
-        <div class="w-6 h-0.5 bg-black"></div>
-        <div class="w-6 h-0.5 bg-black"></div>
-        <div class="w-6 h-0.5 bg-black"></div>
-      </div>
-  </button>
+<header class="banner-blue w-full shadow-lg">
 
-  <h1 class="text-4xl mb-4 text-white">Personenlexikon für Schleswig-Holstein</h1>
+  <!-- MOBILE TOP BAR (nur sichtbar < md) -->
+  <div class="md:hidden flex items-center justify-between px-6 py-4">
+    
+    <!-- Hamburger Menü -->
+    <button id="menuBtn"
+            class="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow">
+        <div class="space-y-1">
+          <div class="w-6 h-0.5 bg-black"></div>
+          <div class="w-6 h-0.5 bg-black"></div>
+          <div class="w-6 h-0.5 bg-black"></div>
+        </div>
+    </button>
 
-  <p class="text-white leading-relaxed mb-6">
-    Suchen Sie in über 1800 Einträgen des in 13 Bänden zwischen 1971 und 2011 erschienenen
-    <em>Biographischen Lexikons für Schleswig-Holstein und Lübeck.</em> <br>
+    <!-- Kurztitel (für mobile Ansicht) -->
+    <span class="text-white text-lg font-semibold truncate ml-4">
+      Personenlexikon SH
+    </span>
+
+  </div>
+
+  <!-- DESKTOP HEADERBEREICH -->
+  <div class="px-6 py-10">
+    <!-- Volltitel -->
+    <h1 class="hidden md:block text-4xl mb-4 text-white">
+      Personenlexikon für Schleswig-Holstein
+    </h1>
+
+    <!-- Untertitel -->
+    <p class="text-white leading-relaxed mb-6">
+      Suchen Sie in über 1800 Einträgen des in 13 Bänden zwischen 1971 und 2011 erschienenen
+      <em>Biographischen Lexikons für Schleswig-Holstein und Lübeck.</em> <br>
       Sie finden hier Kurzbiografien zu bedeutenden Personen und Familien Schleswig-Holsteins, 
-      darunter Künstler, Wissenschaftler, Politiker, Geistliche, Unternehmer und viele weitere, die in Schleswig-Holstein geboren wurden oder maßgeblich gewirkt haben.
-  </p>
+      darunter Künstler, Wissenschaftler, Politiker, Geistliche, Unternehmer und viele weitere, 
+      die in Schleswig-Holstein geboren wurden oder maßgeblich gewirkt haben.
+    </p>
 
-  <input id="searchInput" type="text"
-         placeholder="Suche nach Name, Ort …"
-         class="w-full md:w-1/2 px-4 py-3 rounded-xl border border-gray-300" />
+    <!-- Suchfeld -->
+    <input id="searchInput" type="text"
+          placeholder="Suche nach Name, Ort …"
+          class="w-full md:w-1/2 px-4 py-3 rounded-xl border border-gray-300" />
+  </div>
+
 </header>
 
 <!-- MOBILE OVERLAY -->
