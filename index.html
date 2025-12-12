@@ -261,7 +261,13 @@ function updateFacetFilters(filtered) {
       if (r[field]) counts[r[field]] = (counts[r[field]] || 0) + 1;
     });
 
-    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const entries = Object.entries(counts)
+  .sort((a,b) => {
+    // 1) Häufigkeit absteigend
+    if (b[1] !== a[1]) return b[1] - a[1];
+    // 2) Innerhalb der Gruppe alphabetisch
+    return a[0].localeCompare(b[0], "de");
+  });
 
     const MAX_VISIBLE = 10;
     let expanded = div.dataset.expanded === "true";
